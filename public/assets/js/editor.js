@@ -1,7 +1,7 @@
 const iframe = document.getElementById('editorFrame');
 let iframeDoc = null;
 let currentHTML = '';
-let currentTemplate = 'institucional';
+let currentTemplate = '';
 
 // ========== CARREGAR TEMPLATE ==========
 async function loadTemplate(name = currentTemplate) {
@@ -144,32 +144,47 @@ document.getElementById('downloadSite').onclick = async () => {
 
 // ========== SALVAR NO BANCO ==========
 document.getElementById('saveProject').onclick = async () => {
-  const title = iframeDoc.title || 'Site sem título';
-  const content = iframeDoc.documentElement.outerHTML;
+  try {
+    const title = (iframeDoc && iframeDoc.title) ? iframeDoc.title : (document.title || 'Projeto sem título');
+    const contentHtml = iframeDoc.documentElement.outerHTML;
 
-  // 🔹 Captura as variáveis CSS globais
-  const cssVars = {};
-  const style = getComputedStyle(iframeDoc.documentElement);
-  for (let i = 0; i < style.length; i++) {
-    const name = style[i];
-    if (name.startsWith('--')) {
-      cssVars[name] = style.getPropertyValue(name).trim();
+    // coletar variáveis CSS (:root)
+    const cssVars = {};
+    const style = iframeDoc.defaultView.getComputedStyle(iframeDoc.documentElement);
+    for (let i = 0; i < style.length; i++) {
+      const name = style[i];
+      if (name.startsWith('--')) {
+        cssVars[name] = style.getPropertyValue(name).trim();
+      }
     }
+
+    const form = new FormData();
+    // id pode ser '' para novo projeto — ProjectController cria e retorna id
+    form.append('id', PROJECT_ID || '');
+    form.append('title', title);
+    form.append('template', currentTemplate || '');
+    form.append('content_html', contentHtml); // padronizamos content_html no backend
+    form.append('global_vars', JSON.stringify(cssVars));
+
+   
+
+    const res = await fetch('/projects/save', { method: 'POST', body: form });
+    const data = await res.json();
+
+    if (data.success) {
+      // Se for criação (antes não havia PROJECT_ID), redireciona para editor?id=newId
+      if (!PROJECT_ID && data.id) {
+        window.location.href = `/editor?id=${data.id}`;
+        return;
+      }
+      alert('✅ Projeto salvo com sucesso!');
+    } else {
+      alert('❌ Falha ao salvar: ' + (data.message || 'erro desconhecido'));
+    }
+  } catch (err) {
+    alert('❌ Erro ao salvar: ' + err.message);
   }
-
-  const form = new FormData();
-  form.append('id', PROJECT_ID || '');
-  form.append('title', title);
-  form.append('template', currentTemplate);
-  form.append('content', content);
-  form.append('global_vars', JSON.stringify(cssVars));
-
-  const res = await fetch('/projects/save', { method: 'POST', body: form });
-  const data = await res.json();
-  if (data.success) alert('✅ Projeto salvo!');
-  else alert('❌ Erro ao salvar: ' + data.message);
 };
-
 
 // ========== ALTERAR TEMPLATE ==========
 document.getElementById('loadTemplate').onclick = () => {

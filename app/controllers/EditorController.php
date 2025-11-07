@@ -12,14 +12,10 @@ class EditorController {
 
     public function index() {
        
-
+        $user_id = $_SESSION['user_id'] ?? 1;
         $id = $_GET['id'] ?? null;
-        if (!$id) {
-            echo "ID do projeto não informado.";
-            return;
-        }
-
-        $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = ?");
+        if ($id) {
+         $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = ?");
         $stmt->execute([$id]);
         $project = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -27,6 +23,14 @@ class EditorController {
             echo "Projeto não encontrado.";
             return;
         }
+        }else{
+            // listar projetos pelo id do usuário
+            $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $projects = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+
 
         // 🔹 Nova lógica: carregar variáveis globais separadas (se existirem)
         $vars = [];
