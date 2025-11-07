@@ -1,0 +1,18 @@
+{
+    "name": "fabricadanet/sistesdafabrica",
+    "description": "Projeto saas de criação de sites para PME",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Fábrica da Net"
+        }
+    ],
+    "require": {
+        "ext-pdo": "*"
+    }
+}

@@ -1,0 +1,8 @@
+# Redireciona todas as requisições para a pasta /public
+RewriteEngine On
+
+# Ignora se já estiver dentro da pasta public
+RewriteCond %{REQUEST_URI} !^/public/
+
+# Redireciona tudo para /public mantendo o caminho e query string
+RewriteRule ^(.*)$ /public/$1 [L,QSA]
