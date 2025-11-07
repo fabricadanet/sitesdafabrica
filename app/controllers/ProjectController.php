@@ -30,13 +30,13 @@ class ProjectController
      * 💾 Salvar ou atualizar projeto
      */
 
- public function save()
+    public function save()
     {
         
         $user_id = $_SESSION['user_id'] ?? 1;
 
         $id          = trim($_POST['id'] ?? '');
-        $title       = trim($_POST['title'] ?? 'Projeto sem título');
+        $title       = trim($_POST['title'] ?? 'Novo Projeto');
         $template    = trim($_POST['template'] ?? '');
         $content     = $_POST['content_html'] ?? '';
         $global_vars = $_POST['global_vars'] ?? '{}';
@@ -55,7 +55,7 @@ class ProjectController
                     INSERT INTO projects (user_id, title, content_html, template, global_vars, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$user_id, $title, $content, $template, $global_vars, $now, $now]);
+                $stmt->execute([$user_id, $title, '', $template, '{}', $now, $now]);
                 $id = $this->pdo->lastInsertId();
             }
 
@@ -66,7 +66,6 @@ class ProjectController
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
-
 
     /**
      * 🔁 Obter projeto (JSON)

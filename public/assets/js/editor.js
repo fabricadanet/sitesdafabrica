@@ -1,7 +1,7 @@
 const iframe = document.getElementById('editorFrame');
 let iframeDoc = null;
 let currentHTML = '';
-let currentTemplate = '';
+let currentTemplate = TEMPLATE_NAME || 'institucional';
 
 // ========== CARREGAR TEMPLATE ==========
 async function loadTemplate(name = currentTemplate) {
@@ -23,8 +23,20 @@ async function loadTemplate(name = currentTemplate) {
     }
   }
 
-  const saved = localStorage.getItem('draftHTML');
-  renderTemplate(saved || defaultTemplate);
+  if (!PROJECT_ID || !data?.data?.content_html) {
+    try {
+      const res = await fetch(`/templates/${name}.html`);
+      const html = await res.text();
+      renderTemplate(html);
+    } catch (e) {
+      console.error('Erro ao carregar template:', e);
+      renderTemplate('<h1>Erro ao carregar template.</h1>');
+    }
+  } else {
+    const saved = localStorage.getItem('draftHTML');
+    renderTemplate(saved || defaultTemplate);
+  }
+
 }
 
 

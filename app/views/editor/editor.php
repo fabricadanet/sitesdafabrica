@@ -50,9 +50,11 @@ $userName = $_SESSION['user_name'] ?? 'Usuário';
 </main>
 
 <script>
-const PROJECT_ID = "<?= $projectId ?>";
+  const PROJECT_ID = <?= json_encode($project['id'] ?? null) ?>;
+  const TEMPLATE_NAME = <?= json_encode($_GET['template'] ?? ($project['template'] ?? 'institucional')) ?>;
 </script>
-<script src="assets/js/editor.js"></script>
+<script src="/assets/js/editor.js"></script>
+
 
 </body>
 </html>

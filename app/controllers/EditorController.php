@@ -1,7 +1,5 @@
 <?php
-// app/controllers/EditorController.php
 namespace App\Controllers;
-use \PDO;
 
 class EditorController {
     private $pdo;
@@ -11,31 +9,29 @@ class EditorController {
     }
 
     public function index() {
-       
+     
         $user_id = $_SESSION['user_id'] ?? 1;
+
         $id = $_GET['id'] ?? null;
+        $template = $_GET['template'] ?? null;
+        $project = null;
+
         if ($id) {
-         $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = ?");
-        $stmt->execute([$id]);
-        $project = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!$project) {
-            echo "Projeto não encontrado.";
-            return;
-        }
-        }else{
-            // listar projetos pelo id do usuário
-            $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE user_id = ?");
-            $stmt->execute([$user_id]);
-            $projects = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $project = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$project) {
+                echo "<script>alert('Projeto não encontrado.');window.location='/projects';</script>";
+                return;
+            }
         }
 
-
-
-        // 🔹 Nova lógica: carregar variáveis globais separadas (se existirem)
-        $vars = [];
-        if (!empty($project['global_vars'])) {
-            $vars = json_decode($project['global_vars'], true);
+        // se não há HTML salvo, carrega o template padrão
+        if ($project && empty($project['content_html']) && $template) {
+            $tplPath = __DIR__ . "/../../templates/{$template}.html";
+            if (file_exists($tplPath)) {
+                $project['content_html'] = file_get_contents($tplPath);
+            }
         }
 
         include __DIR__ . '/../views/editor/editor.php';
