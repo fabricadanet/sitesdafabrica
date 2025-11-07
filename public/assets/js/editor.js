@@ -35,84 +35,170 @@ async function loadTemplate(name) {
   renderTemplate(html);
 }
 
-// =========================
-// Renderização e DOM
-// =========================
+
+// ==============================
+// Renderizar conteúdo + montar painel rapidamente
+// ==============================
 function renderTemplate(html) {
   iframeDoc.open();
   iframeDoc.write(html);
   iframeDoc.close();
-  iframe.onload = () => {
-    currentHTML = html;
-    buildSidebar(); // monta o painel lateral
-  };
+
+  currentHTML = html;
+
+  // Primeira tentativa imediata
+  tryBuildSidebar(0);
+}
+
+// tenta montar o painel várias vezes até o DOM estar completo
+function tryBuildSidebar(attempt) {
+  if (attempt > 10) return console.warn("❌ Timeout ao inicializar painel lateral.");
+
+  // Evita erro caso o iframe ainda não tenha carregado
+  try {
+    const ready = iframeDoc && iframeDoc.body && iframeDoc.body.querySelectorAll('[data-edit]').length > 0;
+    if (ready) {
+      buildSidebar();
+      console.log(`✅ Painel lateral inicializado (tentativa ${attempt + 1})`);
+      return;
+    }
+  } catch (e) {
+    console.warn("Iframe ainda carregando...", e);
+  }
+
+  // tenta novamente a cada 150ms até detectar o DOM
+  setTimeout(() => tryBuildSidebar(attempt + 1), 150);
 }
 
 // =========================
 // Painel lateral dinâmico
 // =========================
+// ==============================
+//  Painel lateral dinâmico (buildSidebar v2)
+// ==============================
 function buildSidebar() {
+  console.log('🧱 Montando painel lateral...');
+
   const varsContainer = document.getElementById('vars-container');
   const textsContainer = document.getElementById('texts-container');
   const imagesContainer = document.getElementById('images-container');
-  varsContainer.innerHTML = '';
-  textsContainer.innerHTML = '';
-  imagesContainer.innerHTML = '';
 
-  // ========== Variáveis globais CSS ==========
+  // Feedback visual durante o carregamento
+  varsContainer.innerHTML = '<div class="text-muted small">⏳ Carregando variáveis...</div>';
+  textsContainer.innerHTML = '<div class="text-muted small">⏳ Carregando textos...</div>';
+  imagesContainer.innerHTML = '<div class="text-muted small">⏳ Carregando imagens...</div>';
+
+  // Espera o DOM do iframe estar disponível
+  if (!iframeDoc || !iframeDoc.body) {
+    console.warn('⚠️ iframe ainda não está pronto. Tentando novamente...');
+    setTimeout(buildSidebar, 150);
+    return;
+  }
+
+  // ==============================
+  // 🎨 VARIÁVEIS GLOBAIS (CSS)
+  // ==============================
   const styles = getComputedStyle(iframeDoc.documentElement);
   const vars = [...styles]
     .filter(n => n.startsWith('--'))
     .map(n => ({ name: n, value: styles.getPropertyValue(n).trim() }));
 
-  vars.forEach(v => {
-    const input = document.createElement('input');
-    input.type = v.value.startsWith('#') || v.name.includes('cor') ? 'color' : 'text';
-    input.value = v.value;
-    input.className = 'form-control mb-2';
-    input.title = v.name;
-    input.oninput = () => {
-      iframeDoc.documentElement.style.setProperty(v.name, input.value);
-      saveDraft();
-    };
-    varsContainer.appendChild(labelWrap(v.name, input));
-  });
+  varsContainer.innerHTML = '';
+  if (vars.length === 0) {
+    varsContainer.innerHTML = '<div class="text-muted small">Nenhuma variável global encontrada.</div>';
+  } else {
+    vars.forEach(v => {
+      const label = document.createElement('label');
+      label.textContent = v.name;
+      label.className = 'form-label text-muted small mt-2';
 
-  // ========== Textos editáveis ==========
-  const textEls = iframeDoc.querySelectorAll('[data-edit]:not(img)');
-  textEls.forEach(el => {
-    const name = el.dataset.edit;
-    const textarea = document.createElement('textarea');
-    textarea.className = 'form-control mb-2';
-    textarea.value = el.innerText.trim();
-    textarea.rows = 2;
-    textarea.oninput = () => {
-      el.innerText = textarea.value;
-      saveDraft();
-    };
-    textsContainer.appendChild(labelWrap(name, textarea));
-  });
-
-  // ========== Imagens ==========
-  const imgEls = iframeDoc.querySelectorAll('img[data-edit]');
-  imgEls.forEach(img => {
-    const name = img.dataset.edit;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.className = 'form-control mb-2';
-    input.onchange = e => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = ev => {
-        img.src = ev.target.result;
+      const input = document.createElement('input');
+      input.type = v.value.match(/^#|rgb|hsl/) ? 'color' : 'text';
+      input.value = v.value;
+      input.className = 'form-control mb-2';
+      input.oninput = () => {
+        iframeDoc.documentElement.style.setProperty(v.name, input.value);
         saveDraft();
       };
-      reader.readAsDataURL(file);
-    };
-    imagesContainer.appendChild(labelWrap(name, input));
-  });
+
+      varsContainer.appendChild(label);
+      varsContainer.appendChild(input);
+    });
+  }
+
+  // ==============================
+  // 🖋️ TEXTOS EDITÁVEIS
+  // ==============================
+  const textEls = iframeDoc.querySelectorAll('[data-edit]:not(img)');
+  textsContainer.innerHTML = '';
+  if (textEls.length === 0) {
+    textsContainer.innerHTML = '<div class="text-muted small">Nenhum texto encontrado.</div>';
+  } else {
+    textEls.forEach(el => {
+      const name = el.dataset.edit || 'sem-nome';
+      const label = document.createElement('label');
+      label.textContent = name;
+      label.className = 'form-label text-muted small mt-2';
+
+      const textarea = document.createElement('textarea');
+      textarea.className = 'form-control mb-2';
+      textarea.value = el.innerText.trim();
+      textarea.rows = 2;
+      textarea.oninput = () => {
+        el.innerText = textarea.value;
+        saveDraft();
+      };
+
+      textsContainer.appendChild(label);
+      textsContainer.appendChild(textarea);
+    });
+  }
+
+  // ==============================
+  // 🖼️ IMAGENS EDITÁVEIS
+  // ==============================
+  const imgEls = iframeDoc.querySelectorAll('img[data-edit]');
+  imagesContainer.innerHTML = '';
+  if (imgEls.length === 0) {
+    imagesContainer.innerHTML = '<div class="text-muted small">Nenhuma imagem encontrada.</div>';
+  } else {
+    imgEls.forEach(img => {
+      const name = img.dataset.edit || 'imagem-sem-id';
+      const label = document.createElement('label');
+      label.textContent = name;
+      label.className = 'form-label text-muted small mt-2';
+
+      const preview = document.createElement('img');
+      preview.src = img.src;
+      preview.style.width = '100%';
+      preview.style.borderRadius = '6px';
+      preview.style.marginBottom = '6px';
+
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.className = 'form-control mb-3';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          img.src = ev.target.result;
+          preview.src = ev.target.result;
+          saveDraft();
+        };
+        reader.readAsDataURL(file);
+      };
+
+      imagesContainer.appendChild(label);
+      imagesContainer.appendChild(preview);
+      imagesContainer.appendChild(input);
+    });
+  }
+
+  console.log(`✅ Painel montado: ${vars.length} variáveis, ${textEls.length} textos, ${imgEls.length} imagens.`);
 }
+
 
 // helper
 function labelWrap(name, el) {
