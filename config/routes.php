@@ -1,13 +1,11 @@
 <?php
 // config/routes.php
-// Router principal do Sites da Fábrica — compatível com editor v3.0
+// Router principal do Sites da Fábrica — com endpoints de admin
 
 use App\Controllers\AuthController;
 use App\Controllers\EditorController;
 use App\Controllers\ProjectController;
 use App\Controllers\AdminController;
-
-
 
 // 🔹 Pega o path da URL (sem query string)
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -40,13 +38,11 @@ switch ($uri) {
 
   // 💾 Projetos
   case '/projects':
-    // Exibe a lista HTML (painel do usuário)
-     header('Content-Type: text/html; charset=utf-8');
+    header('Content-Type: text/html; charset=utf-8');
     (new ProjectController)->list();
     break;
 
   case '/projects/save':
-    // Salvar (POST) — Ajax JSON
     if ($method === 'POST') {
       (new ProjectController)->save();
     } else {
@@ -56,22 +52,18 @@ switch ($uri) {
     break;
 
   case '/projects/get':
-    // Obter projeto (GET)
     (new ProjectController)->get();
     break;
 
+  case '/projects/templates':
+    (new ProjectController)->getTemplates();
+    break;
+
   case '/projects/delete':
-    // Deletar projeto (GET ou POST)
     (new ProjectController)->delete();
     break;
 
-  // 📂 (opcional) API JSON pura — ex: /api/projects
-  case '/api/projects':
-    header('Content-Type: application/json');
-    (new ProjectController)->list();
-    break;
-
-    // ⚙️ ADMIN DASHBOARD
+  // ⚙️ ADMIN DASHBOARD
   case '/admin':
     (new AdminController)->dashboard();
     break;
