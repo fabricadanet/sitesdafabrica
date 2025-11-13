@@ -695,7 +695,8 @@
                 <?php foreach ($projects as $project): ?>
                     <tr>
                         <td>
-                                    <span class="project-name" onclick="editProject(<?= $project['id'] ?>)">
+                                    <span class="project-name" onclick="editProject(<?= $project['id'] ?>, <?= $project['template_id'] ?? 'null' ?>)">
+
                                         <?= htmlspecialchars($project['name']) ?>
                                     </span>
                         </td>
@@ -709,8 +710,10 @@
                         </td>
                         <td>
                             <div class="project-actions">
-                                <a href="/editor?id=<?= $project['id'] ?>" class="btn-action btn-edit">
-                                    <i class="fas fa-edit"></i> Editar
+                                <a href="/editor?id=<?= $project['id'] ?>&template=<?= $project['template_id'] ?>"
+                                   class="btn-action btn-edit">
+
+                                <i class="fas fa-edit"></i> Editar
                                 </a>
                                 <button class="btn-action btn-delete" onclick="deleteProject(<?= $project['id'] ?>)">
                                     <i class="fas fa-trash"></i> Deletar
@@ -939,9 +942,15 @@
         currentProjectName = null;
     }
 
-    function editProject(id) {
-        window.location.href = '/editor?id=' + id;
+    function editProject(id, templateId) {
+        if (templateId) {
+            window.location.href = '/editor?id=' + id + '&template=' + templateId;
+        } else {
+            // fallback — caso o projeto não tenha template_id registrado
+            window.location.href = '/editor?id=' + id;
+        }
     }
+
 
     function deleteProject(id) {
         if (!confirm('Tem certeza que deseja deletar este projeto?')) return;
