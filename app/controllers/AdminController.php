@@ -17,7 +17,7 @@ class AdminController
             header('Location: /login');
             exit;
         }
-        
+
         $stmt = $this->pdo->prepare("SELECT role FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -36,7 +36,7 @@ class AdminController
         $totalProjects = $this->pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
         $totalTemplates = $this->pdo->query("SELECT COUNT(*) FROM templates_library")->fetchColumn();
         $totalSubscriptions = $this->pdo->query("SELECT COUNT(*) FROM subscriptions WHERE status='active'")->fetchColumn();
-        
+
         $revenue = $this->pdo->query("
             SELECT COALESCE(SUM(p.price), 0) as total
             FROM subscriptions s
@@ -59,6 +59,34 @@ class AdminController
         ")->fetchAll(\PDO::FETCH_ASSOC);
 
         include __DIR__ . '/../Views/admin/templates.php';
+    }
+
+    public function templateGet()
+    {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'ID ausente']);
+            return;
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM templates_library WHERE id = ?");
+            $stmt->execute([$id]);
+            $template = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$template) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Template não encontrado']);
+                return;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $template]);
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     public function templateSave()
@@ -103,9 +131,10 @@ class AdminController
             if ($id) {
                 $updates = ["status = ?", "updated_at = CURRENT_TIMESTAMP"];
                 $params = [$status];
-                
+
                 // Adicionar campos opcionais ao UPDATE
                 $fieldsToUpdate = [
+                    'name' => $name,
                     'title' => $title,
                     'description' => $description,
                     'category' => $category,
@@ -119,7 +148,7 @@ class AdminController
                         array_unshift($params, $value);
                     }
                 }
-                
+
                 $params[] = $id;
                 $stmt = $this->pdo->prepare("UPDATE templates_library SET " . implode(", ", $updates) . " WHERE id = ?");
                 $stmt->execute($params);
@@ -181,6 +210,69 @@ class AdminController
         $totalPages = ceil($total / $perPage);
 
         include __DIR__ . '/../Views/admin/users.php';
+    }
+
+    public function userGet()
+    {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'ID ausente']);
+            return;
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
+            $stmt->execute([$id]);
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Usuário não encontrado']);
+                return;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $user]);
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function userSave()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido']);
+            return;
+        }
+
+        $id = $_POST['id'] ?? null;
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $role = $_POST['role'] ?? 'user';
+
+        if (!$id || !$name || !$email) {
+            echo json_encode(['success' => false, 'message' => 'ID, nome e e-mail são obrigatórios']);
+            return;
+        }
+
+        if (!in_array($role, ['user', 'admin'])) {
+            echo json_encode(['success' => false, 'message' => 'Função inválida']);
+            return;
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?");
+            $stmt->execute([$name, $email, $role, $id]);
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Usuário atualizado!']);
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     public function userChangeRole()
@@ -270,6 +362,34 @@ class AdminController
         ")->fetchAll(\PDO::FETCH_ASSOC);
 
         include __DIR__ . '/../Views/admin/plans.php';
+    }
+
+    public function planGet()
+    {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'ID ausente']);
+            return;
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM plans WHERE id = ?");
+            $stmt->execute([$id]);
+            $plan = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$plan) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Plano não encontrado']);
+                return;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $plan]);
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     public function planSave()

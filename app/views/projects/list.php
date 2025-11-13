@@ -1,487 +1,1031 @@
-<!-- app/views/projects/list.php -->
+<?php
+// app/views/projects/list.php
+// Dashboard do usuário com cards informativos e gerenciamento de plano
+// MELHORADO: Adicionados botões de logout e painel admin
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meus Projetos – Sites da Fábrica</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Meus Projetos — Sites da Fábrica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-        font-family: 'Inter', sans-serif;
-    }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .template-card {
-        @apply bg-white rounded-xl overflow-hidden border border-slate-200 hover: border-blue-300 transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer;
-    }
+        .container-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    .template-card:hover {
-        @apply shadow-2xl;
-    }
+        /* ===== HEADER ===== */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-badge {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-badge.admin {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-new-project {
+            background: white;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-new-project:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            background: #f0f0f0;
+        }
+
+        .btn-admin {
+            background: #ff9800;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-admin:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-logout:active {
+            transform: translateY(0);
+        }
+
+        /* ===== CARDS INFORMATIVOS ===== */
+        .cards-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .card-description {
+            font-size: 13px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .card-badge {
+            display: inline-block;
+            background: #e8eaf6;
+            color: #667eea;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* ===== SEÇÃO DE PROJETOS ===== */
+        .projects-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+        .projects-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .projects-table thead tr {
+            border-bottom: 2px solid #eee;
+            background: #f9fafb;
+        }
+
+        .projects-table th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .projects-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        .projects-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .project-name {
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .project-name:hover {
+            color: #5568d3;
+            text-decoration: underline;
+        }
+
+        .project-date {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #e3f2fd;
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        .btn-edit:hover {
+            background: #bbdefb;
+            color: #1565c0;
+            text-decoration: none;
+        }
+
+        .btn-delete {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .btn-delete:hover {
+            background: #ffcdd2;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .btn-create-first {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-create-first:hover {
+            background: #5568d3;
+        }
+
+        /* ===== MODALS ===== */
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            background: #f9fafb;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header .modal-title {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 25px 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-help {
+            color: #999;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .modal-footer {
+            background: #f9fafb;
+            border-top: 1px solid #eee;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary-modal {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary-modal:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary-modal {
+            background: #eee;
+            color: #333;
+        }
+
+        .btn-secondary-modal:hover {
+            background: #ddd;
+        }
+
+        /* ===== UPGRADE CARDS ===== */
+        .upgrade-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .plan-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .plan-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .plan-card.current {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .plan-name-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .plan-price-period {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plan-features i {
+            color: #4caf50;
+            font-size: 12px;
+        }
+
+        .upgrade-button {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+
+        .upgrade-button:hover {
+            background: #5568d3;
+        }
+
+        .upgrade-button.current {
+            background: #ddd;
+            color: #666;
+            cursor: default;
+        }
+
+        .upgrade-button.current:hover {
+            background: #ddd;
+        }
+
+        .current-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* ===== PROFILE SECTION ===== */
+        .profile-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-update-profile {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+
+        .btn-update-profile:hover {
+            background: #5568d3;
+        }
+
+        @media (max-width: 768px) {
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-left {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .projects-table {
+                font-size: 13px;
+            }
+
+            .projects-table th,
+            .projects-table td {
+                padding: 12px 8px;
+            }
+        }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-    <!-- Header -->
-    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl">
-                    <span class="text-lg font-bold text-white">⚡</span>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-900">Sites da Fábrica</h1>
-                    <p class="text-xs text-slate-500">Gerenciador de Projetos</p>
-                </div>
+<body>
+
+<div class="container-main">
+
+    <!-- ===== HEADER ===== -->
+    <div class="header-section">
+        <div class="header-left">
+            <div class="header-title">
+                <h1>⚡ Meus Projetos</h1>
             </div>
-            <button onclick="openTemplateModal()"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Novo Projeto
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span><?= htmlspecialchars($userData['name'] ?? 'Usuário') ?></span>
+                <?php if (isset($userData['role']) && $userData['role'] === 'admin'): ?>
+                    <span class="user-badge admin">Admin</span>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-new-project" onclick="showNewProjectModal()">
+                <i class="fas fa-plus"></i> Novo Projeto
             </button>
-            <!-- Botão Admin (visível apenas para admins) -->
 
-            <a href="/admin"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
-                title="Painel Administrativo">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Admin
-            </a>
+            <?php if (isset($userData['role']) && $userData['role'] === 'admin'): ?>
+                <a href="/admin" class="btn-admin">
+                    <i class="fas fa-cog"></i> Painel Admin
+                </a>
+            <?php endif; ?>
 
-            <a href="/logout" onclick="return confirm('Tem certeza que deseja fazer logout?');" class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 
-    font-semibold rounded-lg transition-all duration-200 border border-red-200 hover:border-red-300">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Sair
+            <a href="/logout" class="btn-logout" onclick="return confirm('Tem certeza que deseja fazer logout?')">
+                <i class="fas fa-sign-out-alt"></i> Sair
             </a>
         </div>
-    </header>
+    </div>
 
-    <!-- Conteúdo Principal -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Título da Seção -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-slate-900 mb-2">Meus Projetos</h2>
-            <p class="text-slate-600">Gerencie e edite todos os seus sites em um único lugar</p>
+    <!-- ===== CARDS INFORMATIVOS ===== -->
+    <div class="cards-section">
+        <!-- Plano Atual -->
+        <div class="info-card">
+            <div class="card-title">💳 Plano Atual</div>
+            <div class="card-value"><?= htmlspecialchars($planData['name'] ?? 'Gratuito') ?></div>
+            <div class="card-description">
+                <?= htmlspecialchars($planData['description'] ?? 'Plano padrão') ?>
+            </div>
+            <div class="card-badge">
+                Renova em <?= $subscriptionData['renews_at'] ?? date('d/m/Y', strtotime('+30 days')) ?>
+            </div>
         </div>
-        <!-- Lista de Projetos -->
+
+        <!-- Projetos Utilizados -->
+        <div class="info-card">
+            <div class="card-title">📊 Projetos</div>
+            <div class="card-value"><?= $totalProjects ?>/<?= $planData['max_projects'] ?? 3 ?></div>
+            <div class="card-description">
+                Você criou <strong><?= $totalProjects ?></strong> projeto(s) do limite de <strong><?= $planData['max_projects'] ?? 3 ?></strong>
+            </div>
+            <div class="card-badge">
+                <?= ($totalProjects < ($planData['max_projects'] ?? 3)) ? 'Espaço disponível' : 'Limite atingido' ?>
+            </div>
+        </div>
+
+        <!-- Espaço de Armazenamento -->
+        <div class="info-card">
+            <div class="card-title">💾 Armazenamento</div>
+            <div class="card-value"><?= $planData['max_storage_mb'] ?? 100 ?>MB</div>
+            <div class="card-description">
+                Até <?= $planData['max_storage_mb'] ?? 100 ?>MB de armazenamento disponível
+            </div>
+            <div class="card-badge">
+                <?php if ($planData['price'] == 0): ?>Plano Gratuito<?php else: ?>Plano Pago<?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SEÇÃO DE PROJETOS ===== -->
+    <div class="projects-section">
+        <div class="section-title">
+            <i class="fas fa-folder"></i> Seus Projetos
+        </div>
+
         <?php if (!empty($projects)): ?>
-        <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b border-slate-200 bg-slate-50">
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Projeto</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Categoria</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Template</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Criado em</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-slate-700">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        <?php foreach ($projects as $p): ?>
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <!-- Projeto -->
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <span class="text-lg">🌐</span>
+            <table class="projects-table">
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Template</th>
+                    <th>Atualizado em</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($projects as $project): ?>
+                    <tr>
+                        <td>
+                                    <span class="project-name" onclick="editProject(<?= $project['id'] ?>)">
+                                        <?= htmlspecialchars($project['name']) ?>
+                                    </span>
+                        </td>
+                        <td>
+                            <?= htmlspecialchars($project['template_name'] ?? 'Padrão') ?>
+                        </td>
+                        <td>
+                                    <span class="project-date">
+                                        <?= date('d/m/Y H:i', strtotime($project['updated_at'])) ?>
+                                    </span>
+                        </td>
+                        <td>
+                            <div class="project-actions">
+                                <a href="/editor?id=<?= $project['id'] ?>" class="btn-action btn-edit">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <button class="btn-action btn-delete" onclick="deleteProject(<?= $project['id'] ?>)">
+                                    <i class="fas fa-trash"></i> Deletar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="empty-state">
+                <div class="empty-state-icon">📂</div>
+                <div class="empty-state-text">Nenhum projeto criado ainda</div>
+                <button class="btn-create-first" onclick="showNewProjectModal()">
+                    Criar Primeiro Projeto
+                </button>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- ===== SEÇÃO DE UPGRADE ===== -->
+    <?php if ($planData['name'] !== 'Premium'): ?>
+        <div class="projects-section">
+            <div class="section-title">
+                <i class="fas fa-rocket"></i> Faça um Upgrade
+            </div>
+            <div class="upgrade-cards" id="plansContainer">
+                <!-- Planos serão carregados via JavaScript -->
+            </div>
+        </div>
+    <?php endif; ?>
+
+</div>
+
+<!-- ===== MODAL NOVO PROJETO ===== -->
+<div id="newProjectModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Novo Projeto</h5>
+            <button type="button" class="close" onclick="closeNewProjectModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="projectName">Nome do Projeto</label>
+                <input type="text" id="projectName" placeholder="Ex: Meu Site Profissional">
+                <div class="form-help">Escolha um nome descritivo para seu projeto</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal btn-secondary-modal" onclick="closeNewProjectModal()">Cancelar</button>
+            <button type="button" class="btn-modal btn-primary-modal" onclick="createNewProject()">Próximo</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL SELEÇÃO DE TEMPLATES ===== -->
+<div id="templateSelectorModal" class="modal">
+    <div class="modal-content modal-templates">
+        <div class="modal-header">
+            <h5 class="modal-title">Escolha um Template</h5>
+            <button type="button" class="close" onclick="closeTemplateSelector()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color: #666; margin-bottom: 20px;">Selecione um template para começar. Você poderá customizar tudo depois!</p>
+            <div id="templatesGrid" class="templates-grid"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal btn-secondary-modal" onclick="closeTemplateSelector()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== STYLES ADICIONAIS ===== -->
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        font-weight: bold;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #333;
+    }
+</style>
+
+<script>
+    const currentPlanName = '<?= $planData['name'] ?? 'Gratuito' ?>';
+
+    // Funções do Modal
+    function showNewProjectModal() {
+        document.getElementById('newProjectModal').classList.add('show');
+    }
+
+    function closeNewProjectModal() {
+        document.getElementById('newProjectModal').classList.remove('show');
+    }
+
+    let currentProjectId = null;
+    let currentProjectName = null;
+
+    function createNewProject() {
+        const projectName = document.getElementById('projectName').value;
+
+        if (!projectName.trim()) {
+            alert('Por favor, digite um nome para o projeto');
+            return;
+        }
+
+        // Salvar projeto via AJAX
+        fetch('/api/projects/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'name=' + encodeURIComponent(projectName)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentProjectId = data.project_id;
+                    currentProjectName = projectName;
+                    closeNewProjectModal();
+                    showTemplateSelector();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+    }
+
+    function showTemplateSelector() {
+        // Carregar templates
+        fetch('/api/projects/templates')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = document.getElementById('templateSelectorModal');
+                    const container = document.getElementById('templatesGrid');
+                    container.innerHTML = '';
+
+                    if (data.templates.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #999;">Nenhum template disponível</p>';
+                    } else {
+                        data.templates.forEach(template => {
+                            const templateCard = `
+                                    <div class="template-card" onclick="selectTemplate(${template.id}, '${template.name}')">
+                                        <div class="template-thumb">
+                                            ${template.thumb_file ? `<img src="${template.thumb_file}" alt="${template.name}">` : '<div class="template-placeholder"><i class="fas fa-image"></i></div>'}
+                                        </div>
+                                        <div class="template-info">
+                                            <h6>${template.title || template.name}</h6>
+                                            <p>${template.description || 'Template profissional'}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="font-semibold text-slate-900"><?= htmlspecialchars($p['title']) ?></p>
+                                `;
+                            container.innerHTML += templateCard;
+                        });
+                    }
 
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                    <?= htmlspecialchars(ucfirst($p['template_category'] ?? 'geral')) ?>
-                                </span>
-                            </td>
+                    modal.classList.add('show');
+                } else {
+                    alert('Erro ao carregar templates: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao carregar templates');
+            });
+    }
 
-                            <!-- Template -->
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                    <?= htmlspecialchars(ucfirst($p['template_title'] ?? 'Sem Template')) ?>
-                                </span>
-                            </td>
+    function selectTemplate(templateId, templateName) {
+        // Salvar o template no projeto
+        fetch('/api/projects/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'id=' + currentProjectId + '&template_id=' + templateId + '&name=' + encodeURIComponent(currentProjectName)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Ir para o editor com o template selecionado
+                    window.location.href = '/editor?id=' + currentProjectId + '&template=' + templateId;
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+    }
 
+    function closeTemplateSelector() {
+        document.getElementById('templateSelectorModal').classList.remove('show');
+        currentProjectId = null;
+        currentProjectName = null;
+    }
 
-                            <!-- Data -->
-                            <td class="px-6 py-4 text-sm text-slate-600">
-                                <?= date('d/m/Y H:i', strtotime($p['created_at'])) ?></td>
+    function editProject(id) {
+        window.location.href = '/editor?id=' + id;
+    }
 
+    function deleteProject(id) {
+        if (!confirm('Tem certeza que deseja deletar este projeto?')) return;
 
-                            <!-- Ações -->
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="/editor?id=<?= $p['id'] ?>"
-                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg transition-all duration-200 text-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                        Editar
-                                    </a>
-                                    <button
-                                        onclick="deleteProject(<?= $p['id'] ?>, '<?= htmlspecialchars($p['title']) ?>')"
-                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded-lg transition-all duration-200 text-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                        Excluir
+        fetch('/api/projects/delete?id=' + id, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            });
+    }
+
+    // Carregar planos
+    function loadPlans() {
+        fetch('/api/projects/plans')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('plansContainer');
+                    container.innerHTML = '';
+
+                    data.plans.forEach(plan => {
+                        const isCurrentPlan = plan.name === currentPlanName;
+                        const planHTML = `
+                                <div class="plan-card ${isCurrentPlan ? 'current' : ''}">
+                                    ${isCurrentPlan ? '<div class="current-badge">Plano Atual</div>' : ''}
+                                    <div class="plan-name-header">${plan.name}</div>
+                                    <div class="plan-price">R$ ${parseFloat(plan.price).toFixed(2)}</div>
+                                    <div class="plan-price-period">por mês</div>
+                                    <ul class="plan-features">
+                                        <li><i class="fas fa-check"></i> ${plan.max_projects} Projetos</li>
+                                        <li><i class="fas fa-check"></i> ${plan.max_storage_mb}MB Storage</li>
+                                        <li><i class="fas fa-check"></i> ${plan.max_domains} Domínios</li>
+                                        <li><i class="fas fa-check"></i> ${plan.max_subdomains} Subdomínios</li>
+                                    </ul>
+                                    <button class="upgrade-button ${isCurrentPlan ? 'current' : ''}"
+                                        onclick="${isCurrentPlan ? 'return false;' : 'upgradePlan(' + plan.id + ')'}"
+                                        ${isCurrentPlan ? 'disabled' : ''}>
+                                        ${isCurrentPlan ? 'Plano Atual' : 'Fazer Upgrade'}
                                     </button>
                                 </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <?php else: ?>
-        <!-- Estado Vazio -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6v6m0 0v6m0-6h6m0 0h6M6 12a6 6 0 11-12 0 6 6 0 0112 0z" />
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">Nenhum projeto ainda</h3>
-            <p class="text-slate-600 mb-6">Comece criando seu primeiro site selecionando um template</p>
-            <button onclick="openTemplateModal()"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Criar Novo Projeto
-            </button>
-        </div>
-        <?php endif; ?>
-    </main>
-
-    <!-- MODAL DE SELEÇÃO DE TEMPLATE -->
-    <div id="templateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        style="display:none;">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <!-- Header Modal -->
-            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900">Escolha um Template</h2>
-                    <p class="text-sm text-slate-600 mt-1">Selecione o tipo de site que deseja criar</p>
-                </div>
-                <button type="button" onclick="closeTemplateModal()"
-                    class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Body Modal -->
-            <div class="p-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="templateGrid"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CRIAÇÃO DE PROJETO -->
-    <div id="createModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        style="display:none;">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-
-            <!-- Header Modal -->
-            <div class="border-b border-slate-200 px-6 py-4">
-                <h2 class="text-xl font-bold text-slate-900">Criar Novo Projeto</h2>
-                <p class="text-sm text-slate-600 mt-1">Dê um nome ao seu novo site</p>
-            </div>
-
-            <!-- Body Modal -->
-            <div class="p-6">
-                <form id="createForm" class="space-y-4">
-                    <div>
-                        <label for="projectTitle" class="block text-sm font-semibold text-slate-700 mb-2">
-                            Nome do Projeto
-                        </label>
-                        <input type="text" id="projectTitle" name="title" placeholder="Ex: Meu site Incrível" required
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500
-                        focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all">
-                    </div>
-
-                    <!-- Template selecionado -->
-                    <input type="hidden" name="template" id="templateChoice">
-                    <input type="hidden" name="category" id="categoryChoice">
-
-                    <!-- IMPORTANTE: O botão agora é SUBMIT -->
-                    <button type="submit"
-                        class="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800
-                    text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
-                        Criar Projeto
-                    </button>
-                </form>
-            </div>
-
-            <!-- Footer Modal -->
-            <div class="border-t border-slate-200 px-6 py-4 flex items-center justify-end">
-                <button type="button" onclick="closeCreateModal()"
-                    class="px-4 py-2.5 text-slate-700 font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors duration-200">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
-    <div id="deleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        style="display:none;">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
-            <!-- Body Modal -->
-            <div class="p-6">
-                <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4v2m0 0v2m-6-6v-6a2 2 0 012-2h6a2 2 0 012 2v6m-9 0a9 9 0 1118 0 9 9 0 01-18 0z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900 text-center mb-2">Excluir Projeto?</h3>
-                <p class="text-slate-600 text-center mb-6">
-                    Tem certeza que deseja excluir o projeto <span id="projectNameDelete" class="font-semibold"></span>?
-                    Esta ação não pode ser desfeita.
-                </p>
-            </div>
-
-            <!-- Footer Modal -->
-            <div class="border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3">
-                <button type="button" onclick="closeDeleteModal()"
-                    class="px-4 py-2.5 text-slate-700 font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors duration-200">
-                    Cancelar
-                </button>
-                <button type="button" onclick="confirmDelete()"
-                    class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
-                    Excluir
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-    let templates = []; // Array vazio, será preenchido via AJAX
-
-    // Carregar templates ao abrir o modal
-    async function openTemplateModal() {
-        try {
-            const res = await fetch('/projects/templates');
-            const data = await res.json();
-
-            if (data.success && data.data) {
-                templates = data.data;
-            }
-        } catch (error) {
-            console.warn('Erro ao carregar templates:', error);
-            // Fallback para templates hardcoded em caso de erro
-            templates = [{
-                    name: 'institucional',
-                    title: 'Institucional',
-                    thumb: '/templates/thumbs/institucional.jpg',
-                    description: 'Para empresas e profissionais'
-                },
-                {
-                    name: 'restaurante',
-                    title: 'Restaurante',
-                    thumb: '/templates/thumbs/restaurante1.jpg',
-                    description: 'Cardápio e reservas'
-                },
-            ];
-        }
-
-        const grid = document.getElementById('templateGrid');
-        grid.innerHTML = templates.map(t => `
-    <div class="template-card group" onclick="chooseTemplate('${t.html_file || t.name}')">
-    <div class="relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 h-40 flex items-center justify-center">
-    ${t.thumb ? `<img src="/templates/thumbs/${t.thumb}" style="width:100%; height:100%; object-fit:cover;" alt="${t.title}">` : `<span class="text-5xl group-hover:scale-110 transition-transform duration-300">📄</span>`}
-    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-    </div>
-    <div class="p-4">
-    <h3 class="font-bold text-slate-900 text-center mb-1">${t.title}</h3>
-    <p class="text-xs text-slate-600 text-center">${t.description || 'Template customizado'}</p>
-    </div>
-    </div>
-    `).join('');
-
-        document.getElementById('templateModal').style.display = 'flex';
-    }
-
-    let pendingDeleteId = null;
-
-    // ==== HELPER PARA REMOVER EXTENSÃO .html ====
-    function getTemplateNameWithoutExtension(filename) {
-        if (!filename) return '';
-        return filename.replace(/\.html$/i, '');
-    }
-
-    function closeTemplateModal() {
-        document.getElementById('templateModal').style.display = 'none';
-    }
-
-    let isCreating = false;
-
-    // Ao clicar em um template
-    function chooseTemplate(templateName) {
-        const clean = getTemplateNameWithoutExtension(templateName);
-
-        // Salva imediatamente
-        const input = document.getElementById('templateChoice');
-        input.value = clean;
-        input.setAttribute('value', clean);
-
-        document.getElementById('templateModal').style.display = 'none';
-        document.getElementById('createModal').style.display = 'flex';
-
-        setTimeout(() => document.getElementById('projectTitle').focus(), 80);
-    }
-
-    // FORMA ÚNICA DE ENVIAR O FORM
-    document.getElementById('createForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        createProject();
-    });
-
-    // Criar projeto — garantido sem duplicação
-    async function createProject() {
-        if (isCreating) return; // evita salvar 2x
-        isCreating = true;
-
-        const form = document.getElementById('createForm');
-        const title = document.getElementById('projectTitle').value.trim();
-        const template = document.getElementById('templateChoice').value;
-
-        if (!title) {
-            alert('Por favor, insira um nome para o projeto');
-            isCreating = false;
-            return;
-        }
-
-        const formData = new FormData(form);
-
-        try {
-            const res = await fetch('/projects/save', {
-                method: 'POST',
-                body: formData
+                            `;
+                        container.innerHTML += planHTML;
+                    });
+                }
             });
-
-            const data = await res.json();
-
-            if (data.success) {
-                window.location.href = `/editor?id=${data.id}&template=${template}`;
-            } else {
-                alert('Erro: ' + (data.message || 'Falha ao criar projeto'));
-            }
-        } catch (error) {
-            alert('Erro ao criar projeto: ' + error.message);
-        }
-
-        isCreating = false;
     }
 
+    function upgradePlan(planId) {
+        if (!confirm('Deseja fazer upgrade para este plano?')) return;
 
-
-    function closeCreateModal() {
-        document.getElementById('createModal').style.display = 'none';
-        document.getElementById('createForm').reset();
-    }
-
-    async function createProject() {
-        const form = document.getElementById('createForm');
-        const title = document.getElementById('projectTitle').value.trim();
-        const template = document.getElementById('templateChoice').value;
-
-        if (!title) {
-            alert('Por favor, insira um nome para o projeto');
-            return;
-        }
-
-        const formData = new FormData(form);
-        try {
-            const res = await fetch('/projects/save', {
-                method: 'POST',
-                body: formData
+        fetch('/api/projects/upgrade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'plan_id=' + planId
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Upgrade realizado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
             });
-            const data = await res.json();
+    }
 
-            if (data.success) {
-                window.location.href = `/editor?id=${data.id}&template=${template}`;
-            } else {
-                alert('Erro: ' + (data.message || 'Falha ao criar projeto'));
-            }
-        } catch (error) {
-            alert('Erro ao criar projeto: ' + error.message);
+    // Carregar planos ao abrir a página
+    window.addEventListener('load', loadPlans);
+
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+        const modal = document.getElementById('newProjectModal');
+        if (event.target == modal) {
+            modal.classList.remove('show');
         }
     }
+</script>
 
-    // ==== EXCLUIR ====
-    function deleteProject(id, title) {
-        pendingDeleteId = id;
-        document.getElementById('projectNameDelete').textContent = title;
-        document.getElementById('deleteModal').style.display = 'flex';
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').style.display = 'none';
-        pendingDeleteId = null;
-    }
-
-    async function confirmDelete() {
-        if (!pendingDeleteId) return;
-
-        try {
-            const res = await fetch(`/projects/delete?id=${pendingDeleteId}`);
-            const data = await res.json();
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Erro ao excluir projeto');
-            }
-        } catch (error) {
-            alert('Erro: ' + error.message);
-        }
-    }
-
-    // Fechar modais ao clicar fora
-    document.addEventListener('click', (e) => {
-        if (e.target.id === 'templateModal') closeTemplateModal();
-        if (e.target.id === 'createModal') closeCreateModal();
-        if (e.target.id === 'deleteModal') closeDeleteModal();
-    });
-
-    // Enter para criar projeto
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && document.getElementById('createModal').style.display !== 'none') {
-            e.preventDefault();
-            createProject();
-        }
-    });
-    </script>
 </body>
 
 </html>
