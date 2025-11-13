@@ -233,9 +233,10 @@ function saveDraft() {
 // Salvar Projeto
 // =========================
 document.getElementById('saveProject').onclick = async () => {
-  const title = iframeDoc.title || 'Sem título';
+
   const contentHtml = iframeDoc.documentElement.outerHTML;
 
+  // Captura variáveis globais (CSS)
   const cssVars = {};
   const styles = getComputedStyle(iframeDoc.documentElement);
   [...styles].forEach(n => {
@@ -244,18 +245,22 @@ document.getElementById('saveProject').onclick = async () => {
 
   const form = new FormData();
   form.append('id', PROJECT_ID || '');
-  form.append('title', title);
-  form.append('template', currentTemplate);
+  form.append('title', PROJECT_TITLE);   // ✅ Usar título REAL do projeto
+  form.append('template', TEMPLATE_NAME); 
   form.append('content_html', contentHtml);
   form.append('global_vars', JSON.stringify(cssVars));
 
   const res = await fetch('/projects/save', { method: 'POST', body: form });
   const data = await res.json();
+
   if (data.success) {
     alert('💾 Projeto salvo!');
-    if (!PROJECT_ID && data.id) window.location.href = `/editor?id=${data.id}&template=${currentTemplate}`;
-  } else alert('Erro ao salvar: ' + (data.message || 'Falha desconhecida'));
+    if (!PROJECT_ID && data.id) window.location.href = `/editor?id=${data.id}&template=${TEMPLATE_NAME}`;
+  } else {
+    alert('Erro ao salvar: ' + (data.message || 'Falha desconhecida'));
+  }
 };
+
 
 // =========================
 // Preview / Download

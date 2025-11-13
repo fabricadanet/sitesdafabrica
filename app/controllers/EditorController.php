@@ -34,7 +34,6 @@ class EditorController {
             }
         }
 
-        include __DIR__ . '/../views/editor/editor.php';
+        include __DIR__ . '/../Views/editor/editor.php';
     }
 }
-

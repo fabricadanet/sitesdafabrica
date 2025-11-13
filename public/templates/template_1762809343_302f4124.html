@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos - Festas e Celebrações</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .btn-primaria { background: linear-gradient(135deg, var(--cor-primaria), var(--cor-secundaria)); color: white; transition: all 0.3s; }
+    .btn-primaria:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .card-evento { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); transition: all 0.3s; }
+    .card-evento:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
+    .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+    .modal-content { background: white; margin: 5% auto; padding: 30px; border-radius: 20px; max-width: 600px; }
+    .close { float: right; font-size: 28px; cursor: pointer; }
+    .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 40px; right: 40px; background-color: #25d366; color: #FFF; border-radius: 50px; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4); z-index: 100; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; animation: pulse 2s infinite; }
+    .whatsapp-float:hover { transform: scale(1.1); }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
+    .whatsapp-float svg { width: 35px; height: 35px; }
+  </style>
+</head>
+<body style="--cor-primaria:#ec4899; --cor-secundaria:#f59e0b;">
+
+  <header class="bg-white shadow-md sticky top-0 z-40">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <img id="logo" src="https://placehold.co/150x50?text=Logo" alt="Logo" class="h-12">
+        <h1 id="nome-empresa" class="font-bold text-2xl" style="color: var(--cor-primaria);"></h1>
+      </div>
+      <nav class="hidden md:block">
+        <ul id="menu" class="flex gap-6"></ul>
+      </nav>
+      <button id="btn-orcamento" class="btn-primaria px-6 py-3 rounded-full font-semibold">Solicitar Orçamento</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="py-20 bg-gradient-to-br from-pink-50 to-orange-50">
+      <div class="container mx-auto px-6">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 id="titulo-home" class="text-5xl font-bold mb-6" style="color: var(--cor-primaria);"></h2>
+            <p id="descricao-home" class="text-xl text-gray-700 mb-8"></p>
+            <a href="#servicos" class="btn-primaria px-8 py-4 rounded-full font-semibold inline-block">Ver Serviços</a>
+          </div>
+          <img id="banner" src="https://placehold.co/600x400?text=Eventos" alt="Banner" class="rounded-3xl shadow-2xl">
+        </div>
+      </div>
+    </section>
+
+    <section id="servicos" class="py-20 bg-white">
+      <div class="container mx-auto px-6">
+        <h2 id="titulo-servicos" class="text-4xl font-bold text-center mb-4" style="color: var(--cor-primaria);"></h2>
+        <p id="descricao-servicos" class="text-xl text-gray-600 text-center mb-12"></p>
+        <div id="lista-servicos" class="grid md:grid-cols-3 gap-8"></div>
+      </div>
+    </section>
+
+    <section id="galeria" class="py-20 bg-gray-50">
+      <div class="container mx-auto px-6">
+        <h2 id="titulo-galeria" class="text-4xl font-bold text-center mb-12" style="color: var(--cor-primaria);"></h2>
+        <div id="lista-galeria" class="grid md:grid-cols-4 gap-6"></div>
+      </div>
+    </section>
+
+    <section id="contato" class="py-20 bg-gradient-to-br from-pink-500 to-orange-500 text-white">
+      <div class="container mx-auto px-6 text-center">
+        <h2 id="titulo-contato" class="text-4xl font-bold mb-6"></h2>
+        <p id="descricao-contato" class="text-xl mb-8"></p>
+        <button id="btn-contato" class="bg-white text-pink-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all">Entre em Contato</button>
+      </div>
+    </section>
+
+    <div id="modal-orcamento" class="modal">
+      <div class="modal-content">
+        <span class="close" id="fechar-modal">&times;</span>
+        <h2 class="text-3xl font-bold mb-6" style="color: var(--cor-primaria);">Solicitar Orçamento</h2>
+        <form class="space-y-4">
+          <input type="text" placeholder="Seu nome" class="w-full border-2 p-3 rounded-lg" required>
+          <input type="tel" placeholder="Seu telefone" class="w-full border-2 p-3 rounded-lg" required>
+          <input type="date" placeholder="Data do evento" class="w-full border-2 p-3 rounded-lg" required>
+          <textarea placeholder="Detalhes do evento" rows="4" class="w-full border-2 p-3 rounded-lg" required></textarea>
+          <button type="submit" class="btn-primaria w-full px-6 py-3 rounded-lg font-semibold">Enviar Solicitação</button>
+        </form>
+      </div>
+    </div>
+
+    <a href="https://wa.me/5551999999999?text=Olá!%20Gostaria%20de%20um%20orçamento%20para%20evento." target="_blank" class="whatsapp-float">
+      <svg viewBox="0 0 32 32" fill="currentColor"><path d="M16.002 0C7.174 0 0 7.174 0 16c0 2.835.747 5.607 2.174 8.049L.055 31.643l7.842-2.056C10.29 31.109 13.086 32 16.002 32c8.828 0 16-7.174 16-16S24.83 0 16.002 0zm9.477 23.203c-.39 1.096-1.931 2.008-3.162 2.272-.841.178-1.938.321-5.638-1.21-4.738-1.964-7.786-6.74-8.022-7.053-.23-.314-1.896-2.522-1.896-4.81 0-2.29 1.198-3.417 1.625-3.881.427-.464.932-.58 1.242-.58.31 0 .621.003.893.016.286.014.669-.109.996.73.327.84 1.125 2.745 1.225 2.945.1.2.167.434.033.748-.133.314-.2.509-.396.781-.197.273-.414.608-.591.817-.197.231-.403.481-.173.944.23.464.996 1.646 2.136 2.665 1.468 1.313 2.704 1.72 3.088 1.913.384.193.607.161.83-.097.223-.258.96-1.12 1.218-1.505.258-.384.515-.321.866-.193.351.128 2.228 1.05 2.612 1.24.384.193.64.289.736.45.097.161.097.92-.293 2.016z"/></svg>
+    </a>
+  </main>
+
+  <footer class="py-8 bg-gray-900 text-white text-center">
+    <p>&copy; <span id="ano"></span> <span id="footer-nome"></span>. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+      const url = window.location.pathname.split('/').filter(Boolean);
+const slug = url[url.length - 1];
+
+fetch(`/preview-template/${slug}/config`).then(res => res.json()).then(data => {
+      document.body.style.setProperty('--cor-primaria', data.config.cores.primaria);
+      document.body.style.setProperty('--cor-secundaria', data.config.cores.secundaria);
+      document.getElementById('nome-empresa').textContent = data.config.nome;
+      document.getElementById('footer-nome').textContent = data.config.nome;
+      document.getElementById('ano').textContent = new Date().getFullYear();
+      document.getElementById('logo').src = data.config.logo;
+
+      const menu = document.getElementById('menu');
+      data.menu.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href='${item.href}' class='text-gray-700 hover:text-pink-600 font-medium transition-colors'>${item.text}</a>`;
+        menu.appendChild(li);
+      });
+
+      document.getElementById('banner').src = data.pages.home.banner;
+      document.getElementById('titulo-home').textContent = data.pages.home.titulo;
+      document.getElementById('descricao-home').textContent = data.pages.home.descricao;
+
+      document.getElementById('titulo-servicos').textContent = data.pages.servicos.titulo;
+      document.getElementById('descricao-servicos').textContent = data.pages.servicos.descricao;
+      const servicosDiv = document.getElementById('lista-servicos');
+      data.pages.servicos.itens.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'card-evento text-center';
+        card.innerHTML = `
+          <div class="text-5xl mb-4">${s.icone}</div>
+          <h3 class="font-bold text-xl mb-2">${s.nome}</h3>
+          <p class="text-gray-600 mb-4">${s.descricao}</p>
+          <p class="font-bold text-2xl" style="color: var(--cor-primaria);">A partir de R$ ${s.preco}</p>`;
+        servicosDiv.appendChild(card);
+      });
+
+      document.getElementById('titulo-galeria').textContent = data.pages.galeria.titulo;
+      const galeriaDiv = document.getElementById('lista-galeria');
+      data.pages.galeria.imagens.forEach(img => {
+        const div = document.createElement('div');
+        div.innerHTML = `<img src='${img}' alt='Evento' class='w-full h-64 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all'>`;
+        galeriaDiv.appendChild(div);
+      });
+
+      document.getElementById('titulo-contato').textContent = data.pages.contato.titulo;
+      document.getElementById('descricao-contato').textContent = data.pages.contato.descricao;
+    });
+
+    const modal = document.getElementById('modal-orcamento');
+    document.getElementById('btn-orcamento').onclick = () => modal.style.display = 'block';
+    document.getElementById('btn-contato').onclick = () => modal.style.display = 'block';
+    document.getElementById('fechar-modal').onclick = () => modal.style.display = 'none';
+    window.onclick = (e) => { if(e.target == modal) modal.style.display = 'none'; }
+  </script>
+</body>
+</html>

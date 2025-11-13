@@ -26,7 +26,7 @@ class AuthController
                 echo "<script>alert('❌ Usuário ou senha inválidos!');history.back();</script>";
             }
         } else {
-            include __DIR__ . '/../views/auth/login.php';
+            include __DIR__ . '/../Views/auth/login.php';
         }
     }
 
@@ -44,16 +44,14 @@ class AuthController
                 echo "<script>alert('⚠️ E-mail já cadastrado!');history.back();</script>";
             }
         } else {
-            include __DIR__ . '/../views/auth/register.php';
+            include __DIR__ . '/../Views/auth/register.php';
         }
     }
 
     public function logout()
     {
-        session_start();
         session_destroy();
         header('Location: /login');
         exit;
     }
 }
-
