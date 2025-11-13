@@ -98,6 +98,107 @@ else {
     <link rel="stylesheet" href="/assets/css/editor.css">
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <style>
+        .panel {
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            background: #fff;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .panel-header:hover {
+            background: #e5e7eb;
+        }
+
+        .panel-header h6 {
+            margin: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .collapse-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            font-size: 0.75rem;
+        }
+
+        .panel-content {
+            padding: 0.75rem;
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .panel-content.collapsed {
+            max-height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .collapse-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .form-label {
+            display: block;
+            margin-top: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .small {
+            font-size: 0.75rem;
+        }
+
+        .text-muted {
+            color: #6b7280;
+        }
+    </style>
 </head>
 
 <body>
@@ -158,6 +259,16 @@ else {
 
     const iframe = document.getElementById("editorFrame");
     let iframeDoc = null;
+
+    // Função para expandir/colapsar painéis
+    function togglePanel(panelId) {
+        const panel = document.getElementById(panelId);
+        const content = panel.querySelector('.panel-content');
+        const icon = panel.querySelector('.collapse-icon');
+
+        content.classList.toggle('collapsed');
+        icon.classList.toggle('rotated');
+    }
 
     window.addEventListener("load", () => {
         iframeDoc = iframe.contentDocument;
