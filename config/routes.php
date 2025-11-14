@@ -1,6 +1,6 @@
 <?php
 // config/routes.php
-// Router principal — com todos os endpoints
+// Router principal – com todos os endpoints
 // ✅ CORRIGIDO: Adicionado suporte a /api/ routes
 
 use App\Controllers\AuthController;
@@ -118,23 +118,7 @@ switch ($cleanUri) {
             echo json_encode(['success' => false, 'message' => 'Método inválido']);
         }
         break;
- 
-        if ($method === 'POST') {
-            header('Content-Type: application/json');
-            require_once __DIR__ . '/../app/helpers/whm_deploy.php';
-            
-            $userId = $_SESSION['user_id'];
-            $projectId = $_POST['project_id'] ?? null;
-            
-            if (!$projectId) {
-                echo json_encode(['success' => false, 'message' => 'ID do projeto não informado']);
-                exit;
-            }
-            
-            $result = deployProject($pdo, $projectId, $userId);
-            echo json_encode($result);
-        }
-        break; 
+
     // ⚙️ ADMIN DASHBOARD
     case '/admin':
         if (!$isApi) {
@@ -258,7 +242,7 @@ switch ($cleanUri) {
         }
         break;
 
-    // 🔄 ASSINATURAS ADMIN
+    // 📄 ASSINATURAS ADMIN
     case '/admin/subscriptions':
         if (!$isApi) {
             (new AdminController)->subscriptions();
@@ -286,57 +270,80 @@ switch ($cleanUri) {
             (new AdminController)->subscriptionCancel();
         }
         break;
-    // ROTAS DE DEPLOY 
-    case '/api/deploy/publish':
+
+    // 🚀 ROTAS DE DEPLOY 
+    case '/deploy/publish':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->publish();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
-    case '/api/deploy/unpublish':
+
+    case '/deploy/unpublish':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->unpublish();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
 
-    case '/api/deploy/add-domain':
+    case '/deploy/add-domain':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->addDomain();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
 
-    case '/api/deploy/remove-domain':
+    case '/deploy/remove-domain':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->removeDomain();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
 
-    case '/api/deploy/verify-domain':
+    case '/deploy/verify-domain':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->verifyDomain();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
 
-    case '/api/deploy/list-domains':
+    case '/deploy/list-domains':
         header('Content-Type: application/json');
         (new DeployController)->listDomains();
         break;
 
-    case '/api/deploy/purge-cache':
+    case '/deploy/purge-cache':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->purgeCache();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
 
-    case '/api/deploy/save-analytics':
+    case '/deploy/save-analytics':
         if ($method === 'POST') {
             header('Content-Type: application/json');
             (new DeployController)->saveAnalytics();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
     

@@ -1,112 +1,107 @@
 <?php
-// app/helpers/cloudflare_cdn.php
+// app/helpers/analytics_injector.php
+// Helper para injetar Google Analytics nos projetos
 
 /**
- * ===================================================================
- *  HELPER CLOUDFLARE - CDN Integration
- * ===================================================================
+ * Salvar ID do Google Analytics do usuário
+ * 
+ * @param PDO $pdo
+ * @param int $userId
+ * @param string $gaId
+ * @return array
  */
+function saveUserAnalyticsId($pdo, $userId, $gaId)
+{
+    try {
+        // Validar formato do GA ID
+        if (!preg_match('/^(G-|UA-|GT-)[A-Z0-9\-]+$/i', $gaId)) {
+            return [
+                'success' => false,
+                'message' => 'ID do Google Analytics inválido. Use o formato G-XXXXXXXXXX ou UA-XXXXXXXXX'
+            ];
+        }
 
-define('CF_ENABLED', getenv('CLOUDFLARE_ENABLED') === 'true');
-define('CF_API_KEY', getenv('CLOUDFLARE_API_KEY') ?: '');
-define('CF_ZONE_ID', getenv('CLOUDFLARE_ZONE_ID') ?: '');
-define('CF_EMAIL', getenv('CLOUDFLARE_EMAIL') ?: '');
+        // Atualizar ou criar registro
+        $stmt = $pdo->prepare("
+            UPDATE users 
+            SET ga_tracking_id = ? 
+            WHERE id = ?
+        ");
+        $stmt->execute([$gaId, $userId]);
 
-function addToCloudflare($domain) {
-    
-    if (!CF_ENABLED || !CF_API_KEY || !CF_ZONE_ID) {
-        return ['success' => false, 'message' => 'Cloudflare não configurado'];
+        return [
+            'success' => true,
+            'message' => 'Google Analytics configurado! Será aplicado em todos os seus projetos publicados.'
+        ];
+
+    } catch (Exception $e) {
+        error_log("Erro em saveUserAnalyticsId: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Erro ao salvar: ' . $e->getMessage()
+        ];
     }
-    
-    // Extrair domínio raiz e subdomínio
-    $parts = explode('.', $domain);
-    
-    if (count($parts) < 2) {
-        return ['success' => false, 'message' => 'Domínio inválido'];
-    }
-    
-    $name = $domain;
-    $rootDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-    
-    // Adicionar registro DNS no Cloudflare
-    $url = "https://api.cloudflare.com/client/v4/zones/" . CF_ZONE_ID . "/dns_records";
-    
-    $data = [
-        'type' => 'CNAME',
-        'name' => $name,
-        'content' => $rootDomain,
-        'ttl' => 1, // Auto
-        'proxied' => true // CDN ativado
-    ];
-    
-    $response = cloudflareApiRequest($url, 'POST', $data);
-    
-    if ($response['success']) {
-        return ['success' => true, 'message' => 'Domínio adicionado ao Cloudflare CDN'];
-    }
-    
-    return [
-        'success' => false,
-        'message' => $response['errors'][0]['message'] ?? 'Erro ao adicionar ao Cloudflare'
-    ];
 }
 
-function removeFromCloudflare($domain) {
-    
-    if (!CF_ENABLED || !CF_API_KEY || !CF_ZONE_ID) {
-        return ['success' => false];
+/**
+ * Injetar código do Google Analytics no HTML
+ * 
+ * @param string $html
+ * @param string $gaId
+ * @return string
+ */
+function injectGoogleAnalytics($html, $gaId)
+{
+    if (empty($gaId)) {
+        return $html;
     }
-    
-    // Buscar ID do registro DNS
-    $url = "https://api.cloudflare.com/client/v4/zones/" . CF_ZONE_ID . "/dns_records?name=" . urlencode($domain);
-    $response = cloudflareApiRequest($url, 'GET');
-    
-    if (!empty($response['result'][0]['id'])) {
-        $recordId = $response['result'][0]['id'];
+
+    // Código do Google Analytics (GA4)
+    $analyticsCode = "
+    <!-- Google Analytics -->
+    <script async src=\"https://www.googletagmanager.com/gtag/js?id={$gaId}\"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{$gaId}');
+    </script>
+    <!-- End Google Analytics -->
+    ";
+
+    // Tentar injetar antes do </head>
+    if (stripos($html, '</head>') !== false) {
+        $html = str_ireplace('</head>', $analyticsCode . '</head>', $html);
+    } 
+    // Se não tiver </head>, tentar antes do </body>
+    elseif (stripos($html, '</body>') !== false) {
+        $html = str_ireplace('</body>', $analyticsCode . '</body>', $html);
+    } 
+    // Se não tiver nenhum, adicionar no início
+    else {
+        $html = $analyticsCode . $html;
+    }
+
+    return $html;
+}
+
+/**
+ * Obter ID do Google Analytics do usuário
+ * 
+ * @param PDO $pdo
+ * @param int $userId
+ * @return string|null
+ */
+function getUserAnalyticsId($pdo, $userId)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT ga_tracking_id FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Deletar registro
-        $deleteUrl = "https://api.cloudflare.com/client/v4/zones/" . CF_ZONE_ID . "/dns_records/{$recordId}";
-        cloudflareApiRequest($deleteUrl, 'DELETE');
+        return $result['ga_tracking_id'] ?? null;
+    } catch (Exception $e) {
+        error_log("Erro em getUserAnalyticsId: " . $e->getMessage());
+        return null;
     }
-    
-    return ['success' => true];
-}
-
-function purgeCloudflareCache($domain) {
-    
-    if (!CF_ENABLED) {
-        return ['success' => false];
-    }
-    
-    $url = "https://api.cloudflare.com/client/v4/zones/" . CF_ZONE_ID . "/purge_cache";
-    
-    $data = [
-        'hosts' => [$domain]
-    ];
-    
-    $response = cloudflareApiRequest($url, 'POST', $data);
-    
-    return ['success' => $response['success'] ?? false];
-}
-
-function cloudflareApiRequest($url, $method = 'GET', $data = null) {
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'X-Auth-Email: ' . CF_EMAIL,
-        'X-Auth-Key: ' . CF_API_KEY,
-        'Content-Type: application/json'
-    ]);
-    
-    if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    }
-    
-    $response = curl_exec($ch);
-    curl_close($ch);
-    
-    return json_decode($response, true);
 }
