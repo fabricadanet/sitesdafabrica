@@ -11,6 +11,7 @@ class ProjectController
     public function __construct()
     {
         $this->pdo = require __DIR__ . '/../../config/database.php';
+        require_once __DIR__ . '/../helpers/subscription.php';
         $this->requireAuth();
     }
 
@@ -139,7 +140,7 @@ class ProjectController
         $userData = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         $stmt = $this->pdo->prepare("
-            SELECT s.*, p.name, p.price, p.max_projects, p.max_storage_mb, p.description
+            SELECT s.*, p.name, p.price, p.max_projects, p.max_storage_mb, p.description, p.can_access_premium
             FROM subscriptions s
             JOIN plans p ON s.plan_id = p.id
             WHERE s.user_id = ? AND s.status = 'active'
@@ -325,7 +326,7 @@ class ProjectController
     {
         try {
             $plans = $this->pdo->query("
-                SELECT id, name, price, max_projects, max_storage_mb, description
+                SELECT *
                 FROM plans
                 WHERE status = 'active'
                 ORDER BY price ASC

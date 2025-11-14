@@ -122,6 +122,15 @@
             border: 1px solid #ddd;
             margin-bottom: 10px;
         }
+
+        .badge-premium {
+            background: #8b5cf6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -158,6 +167,7 @@
                         <th>Nome</th>
                         <th>Título</th>
                         <th>Categoria</th>
+                        <th>Premium</th>
                         <th>Thumbnail</th>
                         <th>Status</th>
                         <th>Ações</th>
@@ -169,6 +179,13 @@
                             <td><code><?= htmlspecialchars($tpl['name']) ?></code></td>
                             <td><?= htmlspecialchars($tpl['title']) ?></td>
                             <td><?= htmlspecialchars($tpl['category']) ?></td>
+                            <td>
+                                <?php if ($tpl['is_premium']): ?>
+                                    <span class="badge-premium">✨ Premium</span>
+                                <?php else: ?>
+                                    <span style="color: #9ca3af; font-size: 12px;">Padrão</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php if ($tpl['thumb_file']): ?>
                                     <img src="/templates/thumbs/<?= htmlspecialchars($tpl['thumb_file']) ?>"
@@ -237,6 +254,15 @@
                     </div>
 
                     <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_premium" id="templatePremium" class="form-check-input" value="1">
+                            <label class="form-check-label" for="templatePremium">
+                                ✨ Template Premium (apenas para planos pagos)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Arquivo HTML *</label>
                         <input type="file" name="html_file" id="templateHtmlFile" class="form-control" accept=".html">
                         <small class="text-muted">Deixe vazio para manter o arquivo atual</small>
@@ -275,6 +301,7 @@
         document.getElementById('modalTitle').textContent = 'Novo Template';
         document.getElementById('templateForm').reset();
         document.getElementById('templateId').value = '';
+        document.getElementById('templatePremium').checked = false;
         document.getElementById('currentHtmlFile').innerHTML = '';
         document.getElementById('currentThumbPreview').innerHTML = '';
         templateModal.show();
@@ -294,6 +321,7 @@
                 document.getElementById('templateDescription').value = tpl.description || '';
                 document.getElementById('templateCategory').value = tpl.category || 'geral';
                 document.getElementById('templateStatus').value = tpl.status || 'active';
+                document.getElementById('templatePremium').checked = tpl.is_premium ? true : false;
 
                 // Mostrar arquivo HTML atual
                 if (tpl.html_file) {

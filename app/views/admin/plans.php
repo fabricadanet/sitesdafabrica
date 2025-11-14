@@ -171,13 +171,19 @@
 
                         <div class="plan-features">
                             <div>📁 <?= $plan['max_projects'] ?> projetos</div>
-                            <div>💾 <?= $plan['max_storage_mb'] ?> MB de armazenamento</div>
+                            <div>💾 <?= $plan['max_storage_mb'] ?> MB</div>
+                            <div>📥 <?= $plan['max_downloads'] ?? 0 ?> downloads/mês</div>
+                            <div>🌐 <?= $plan['max_domains'] ?? 0 ?> domínios</div>
+                            <div>🔗 <?= $plan['max_subdomains'] ?? 0 ?> subdomínios</div>
                         </div>
 
                         <span class="badge"
                               style="background: <?= $plan['status'] === 'active' ? '#16a34a' : '#dc2626' ?>; margin-bottom: 10px;">
                             <?= ucfirst($plan['status']) ?>
                         </span>
+                        <?php if ($plan['is_featured']): ?>
+                            <span class="badge" style="background: #f59e0b; margin-left: 5px;">⭐ Destaque</span>
+                        <?php endif; ?>
 
                         <div class="mt-3" style="display: flex; gap: 8px;">
                             <button class="btn btn-sm btn-warning" onclick="editPlan(<?= $plan['id'] ?>)">✏️</button>
@@ -192,15 +198,18 @@
 
 <!-- MODAL NOVO/EDITAR PLANO -->
 <div class="modal fade" id="planModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">Plano de Assinatura</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="planForm">
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                     <input type="hidden" name="id" id="planId">
+
+                    <!-- SEÇÃO: Informações Básicas -->
+                    <h6 class="text-muted mb-3">📋 Informações Básicas</h6>
 
                     <div class="mb-3">
                         <label class="form-label">Nome do Plano *</label>
@@ -212,32 +221,101 @@
                         <textarea name="description" id="planDescription" class="form-control" rows="2"></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Preço (R$) *</label>
-                        <input type="number" name="price" id="planPrice" class="form-control" step="0.01" required>
+                    <!-- Preço e Status -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Preço (R$) *</label>
+                            <input type="number" name="price" id="planPrice" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" id="planStatus" class="form-control">
+                                <option value="active">Ativo</option>
+                                <option value="inactive">Inativo</option>
+                                <option value="deprecated">Descontinuado</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Máximo de Projetos *</label>
-                        <input type="number" name="max_projects" id="planMaxProjects" class="form-control" required>
+                    <hr class="my-4">
+                    <h6 class="text-muted mb-3">📊 Limites do Plano</h6>
+
+                    <!-- Limites Principais -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Máximo de Projetos *</label>
+                            <input type="number" name="max_projects" id="planMaxProjects" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Armazenamento Máximo (MB) *</label>
+                            <input type="number" name="max_storage_mb" id="planMaxStorage" class="form-control" required>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Armazenamento Máximo (MB) *</label>
-                        <input type="number" name="max_storage_mb" id="planMaxStorage" class="form-control" required>
+                    <!-- Downloads e Domínios -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Downloads por Mês</label>
+                            <input type="number" name="max_downloads" id="planMaxDownloads" class="form-control" value="1000">
+                            <small class="text-muted">Limite de downloads de sites/projetos por mês</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Domínios Personalizados</label>
+                            <input type="number" name="max_domains" id="planMaxDomains" class="form-control" value="1">
+                            <small class="text-muted">Quantos domínios pode usar neste plano</small>
+                        </div>
                     </div>
 
+                    <!-- Subdomínios e Domínios por Projeto -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subdomínios</label>
+                            <input type="number" name="max_subdomains" id="planMaxSubdomains" class="form-control" value="3">
+                            <small class="text-muted">Ex: site1.seudominio.com</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Domínios por Projeto</label>
+                            <input type="number" name="max_domains_per_project" id="planMaxDomainsPerProject" class="form-control" placeholder="Deixe vazio = ilimitado">
+                            <small class="text-muted">Domínios adicionais por projeto</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="text-muted mb-3">🎯 Visibilidade e Apresentação</h6>
+
+                    <!-- Visibilidade e Destaque -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_featured" id="planIsFeatured" class="form-check-input" value="1">
+                                <label class="form-check-label" for="planIsFeatured">
+                                    <strong>⭐ Plano em Destaque</strong><br>
+                                    <small class="text-muted">Aparecer destacado na página de preços</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_visible" id="planIsVisible" class="form-check-input" value="1" checked>
+                                <label class="form-check-label" for="planIsVisible">
+                                    <strong>👁️ Visível na Página</strong><br>
+                                    <small class="text-muted">Mostrar este plano publicamente</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ordem de Exibição -->
                     <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select name="status" id="planStatus" class="form-control">
-                            <option value="active">Ativo</option>
-                            <option value="inactive">Inativo</option>
-                        </select>
+                        <label class="form-label">Ordem de Exibição (Display Order)</label>
+                        <input type="number" name="display_order" id="planDisplayOrder" class="form-control" value="0">
+                        <small class="text-muted">Planos com número menor aparecem primeiro (0 = padrão)</small>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Plano</button>
                 </div>
             </form>
         </div>
@@ -252,6 +330,9 @@
         document.getElementById('modalTitle').textContent = 'Novo Plano';
         document.getElementById('planForm').reset();
         document.getElementById('planId').value = '';
+        // Resetar checkboxes
+        document.getElementById('planIsFeatured').checked = false;
+        document.getElementById('planIsVisible').checked = true;
         planModal.show();
     }
 
@@ -269,7 +350,14 @@
                 document.getElementById('planPrice').value = plan.price;
                 document.getElementById('planMaxProjects').value = plan.max_projects;
                 document.getElementById('planMaxStorage').value = plan.max_storage_mb;
-                document.getElementById('planStatus').value = plan.status;
+                document.getElementById('planMaxDownloads').value = plan.max_downloads || 1000;
+                document.getElementById('planMaxDomains').value = plan.max_domains || 1;
+                document.getElementById('planMaxSubdomains').value = plan.max_subdomains || 3;
+                document.getElementById('planMaxDomainsPerProject').value = plan.max_domains_per_project || '';
+                document.getElementById('planStatus').value = plan.status || 'active';
+                document.getElementById('planIsFeatured').checked = plan.is_featured == 1;
+                document.getElementById('planIsVisible').checked = plan.is_visible == 1;
+                document.getElementById('planDisplayOrder').value = plan.display_order || 0;
                 planModal.show();
             } else {
                 alert('Erro ao carregar plano');
@@ -297,6 +385,11 @@
         e.preventDefault();
 
         const formData = new FormData(e.target);
+
+        // Converter checkboxes para 0 ou 1
+        formData.set('is_featured', document.getElementById('planIsFeatured').checked ? 1 : 0);
+        formData.set('is_visible', document.getElementById('planIsVisible').checked ? 1 : 0);
+
         const res = await fetch('/admin/plan/save', {
             method: 'POST',
             body: formData

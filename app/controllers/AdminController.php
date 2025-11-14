@@ -178,7 +178,7 @@ class AdminController
     {
         $id = $_GET['id'] ?? null;
         if (!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID ausente']);
+            echo json_encode(['success' => false]);
             return;
         }
 
@@ -392,6 +392,9 @@ class AdminController
         }
     }
 
+
+// Substitua o método planSave() existente por este:
+
     public function planSave()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -406,6 +409,13 @@ class AdminController
         $price = (float)($_POST['price'] ?? 0);
         $maxProjects = (int)($_POST['max_projects'] ?? 5);
         $maxStorage = (int)($_POST['max_storage_mb'] ?? 100);
+        $maxDownloads = (int)($_POST['max_downloads'] ?? 1000);
+        $maxDomains = (int)($_POST['max_domains'] ?? 1);
+        $maxSubdomains = (int)($_POST['max_subdomains'] ?? 3);
+        $maxDomainsPerProject = (!empty($_POST['max_domains_per_project']) ? (int)$_POST['max_domains_per_project'] : null);
+        $isFeatured = (int)($_POST['is_featured'] ?? 0);
+        $isVisible = (int)($_POST['is_visible'] ?? 1);
+        $displayOrder = (int)($_POST['display_order'] ?? 0);
         $status = $_POST['status'] ?? 'active';
 
         if (!$name) {
@@ -415,29 +425,57 @@ class AdminController
 
         try {
             if ($id) {
+                // UPDATE existente
                 $stmt = $this->pdo->prepare("
-                    UPDATE plans
-                    SET name = ?, description = ?, price = ?, max_projects = ?, 
-                        max_storage_mb = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                ");
-                $stmt->execute([$name, $description, $price, $maxProjects, $maxStorage, $status, $id]);
+                UPDATE plans
+                SET name = ?, 
+                    description = ?, 
+                    price = ?, 
+                    max_projects = ?, 
+                    max_storage_mb = ?,
+                    max_downloads = ?,
+                    max_domains = ?,
+                    max_subdomains = ?,
+                    max_domains_per_project = ?,
+                    is_featured = ?,
+                    is_visible = ?,
+                    display_order = ?,
+                    status = ?, 
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ");
+                $stmt->execute([
+                    $name, $description, $price, $maxProjects, $maxStorage,
+                    $maxDownloads, $maxDomains, $maxSubdomains, $maxDomainsPerProject,
+                    $isFeatured, $isVisible, $displayOrder, $status, $id
+                ]);
             } else {
+                // INSERT novo
                 $stmt = $this->pdo->prepare("
-                    INSERT INTO plans (name, description, price, max_projects, max_storage_mb, status)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([$name, $description, $price, $maxProjects, $maxStorage, $status]);
+                INSERT INTO plans 
+                (name, description, price, max_projects, max_storage_mb, 
+                 max_downloads, max_domains, max_subdomains, max_domains_per_project,
+                 is_featured, is_visible, display_order, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+                $stmt->execute([
+                    $name, $description, $price, $maxProjects, $maxStorage,
+                    $maxDownloads, $maxDomains, $maxSubdomains, $maxDomainsPerProject,
+                    $isFeatured, $isVisible, $displayOrder, $status
+                ]);
                 $id = $this->pdo->lastInsertId();
             }
 
             header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'id' => $id]);
+            echo json_encode(['success' => true, 'id' => $id, 'message' => 'Plano salvo com sucesso!']);
         } catch (\Exception $e) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
+
+
 
     public function planDelete()
     {
@@ -451,6 +489,25 @@ class AdminController
             $this->pdo->prepare("DELETE FROM plans WHERE id = ?")->execute([$id]);
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // ===== NOVO MÉTODO: RETORNAR PLANOS EM JSON =====
+    public function plansList()
+    {
+        try {
+            $plans = $this->pdo->query("
+                SELECT id, name, price, max_projects, max_storage_mb, description, status
+                FROM plans
+                WHERE status = 'active'
+                ORDER BY price ASC
+            ")->fetchAll(\PDO::FETCH_ASSOC);
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $plans]);
         } catch (\Exception $e) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -495,6 +552,115 @@ class AdminController
 
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // ===== CRIAR ASSINATURA (ADMIN) =====
+    public function subscriptionCreate()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido']);
+            return;
+        }
+
+        $userId = $_POST['user_id'] ?? null;
+        $planId = $_POST['plan_id'] ?? null;
+        $startedAt = $_POST['started_at'] ?? date('Y-m-d');
+        $renewsAt = $_POST['renews_at'] ?? date('Y-m-d', strtotime('+30 days'));
+        $paymentMethod = $_POST['payment_method'] ?? 'admin_manual';
+        $status = $_POST['status'] ?? 'active';
+
+        // Validações
+        if (!$userId || !$planId) {
+            echo json_encode(['success' => false, 'message' => 'Usuário e plano são obrigatórios']);
+            return;
+        }
+
+        if (!in_array($status, ['active', 'inactive', 'canceled'])) {
+            echo json_encode(['success' => false, 'message' => 'Status inválido']);
+            return;
+        }
+
+        try {
+            // Verificar se usuário existe
+            $stmt = $this->pdo->prepare("SELECT id FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            if (!$stmt->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'Usuário não encontrado']);
+                return;
+            }
+
+            // Verificar se plano existe
+            $stmt = $this->pdo->prepare("SELECT id FROM plans WHERE id = ?");
+            $stmt->execute([$planId]);
+            if (!$stmt->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'Plano não encontrado']);
+                return;
+            }
+
+            // Validar datas
+            $startDate = \DateTime::createFromFormat('Y-m-d', $startedAt);
+            $renewDate = \DateTime::createFromFormat('Y-m-d', $renewsAt);
+
+            if (!$startDate || !$renewDate) {
+                echo json_encode(['success' => false, 'message' => 'Formato de data inválido (use YYYY-MM-DD)']);
+                return;
+            }
+
+            if ($renewDate < $startDate) {
+                echo json_encode(['success' => false, 'message' => 'Data de renovação não pode ser anterior à data de início']);
+                return;
+            }
+
+            // Criar assinatura
+            $stmt = $this->pdo->prepare("
+            INSERT INTO subscriptions 
+            (user_id, plan_id, status, started_at, renews_at, payment_method, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ");
+
+            $stmt->execute([
+                $userId,
+                $planId,
+                $status,
+                $startedAt,
+                $renewsAt,
+                $paymentMethod
+            ]);
+
+            $subscriptionId = $this->pdo->lastInsertId();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'subscription_id' => $subscriptionId,
+                'message' => 'Assinatura criada com sucesso!'
+            ]);
+
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+// ===== LISTAR PLANOS EM JSON (para select no admin) =====
+    public function plansListJson()
+    {
+        try {
+            $stmt = $this->pdo->query("
+            SELECT id, name, price, max_projects, max_storage_mb, status
+            FROM plans
+            WHERE status = 'active'
+            ORDER BY price ASC
+        ");
+            $plans = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $plans]);
         } catch (\Exception $e) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);

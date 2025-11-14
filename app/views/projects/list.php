@@ -2,6 +2,8 @@
 // app/views/projects/list.php
 // Dashboard do usuário com cards informativos e gerenciamento de plano
 // MELHORADO: Adicionados botões de logout e painel admin
+require_once __DIR__ . '/../../helpers/subscription.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -662,17 +664,31 @@
             </div>
         </div>
 
-        <!-- Espaço de Armazenamento -->
+        <!-- Templates Preminum-->
         <div class="info-card">
-            <div class="card-title">💾 Armazenamento</div>
-            <div class="card-value"><?= $planData['max_storage_mb'] ?? 100 ?>MB</div>
+            <div class="card-title">Templates Premium </div>
+            <div class="card-value">
+                <?php if ($planData['can_access_premium'] === 1): ?>
+                    Todos Acessíveis
+                <?php else: ?>
+                    Limitado
+                <?php endif; ?>
+            </div>
+            <?php if ($planData['can_access_premium'] === 1): ?>
+                <div class="card-description">
+                    Acesso a todos os templates premium
+                </div>
+            <?php else: ?>
             <div class="card-description">
-                Até <?= $planData['max_storage_mb'] ?? 100 ?>MB de armazenamento disponível
+                Faça um upgrade para acessar templates exclusivos
             </div>
-            <div class="card-badge">
-                <?php if ($planData['price'] == 0): ?>Plano Gratuito<?php else: ?>Plano Pago<?php endif; ?>
-            </div>
+            <?php endif; ?>
         </div>
+
+        <!-- quantidade de dominoios e subdominios-->
+        
+
+
     </div>
 
     <!-- ===== SEÇÃO DE PROJETOS ===== -->
@@ -736,8 +752,8 @@
     </div>
 
     <!-- ===== SEÇÃO DE UPGRADE ===== -->
-    <?php if ($planData['name'] !== 'Premium'): ?>
-        <div class="projects-section">
+    <?php if ($planData['plan_id'] !== 'Premium'): ?>
+               <div class="projects-section">
             <div class="section-title">
                 <i class="fas fa-rocket"></i> Faça um Upgrade
             </div>
@@ -978,26 +994,28 @@
                     data.plans.forEach(plan => {
                         const isCurrentPlan = plan.name === currentPlanName;
                         const planHTML = `
-                                <div class="plan-card ${isCurrentPlan ? 'current' : ''}">
-                                    ${isCurrentPlan ? '<div class="current-badge">Plano Atual</div>' : ''}
-                                    <div class="plan-name-header">${plan.name}</div>
-                                    <div class="plan-price">R$ ${parseFloat(plan.price).toFixed(2)}</div>
-                                    <div class="plan-price-period">por mês</div>
-                                    <ul class="plan-features">
-                                        <li><i class="fas fa-check"></i> ${plan.max_projects} Projetos</li>
-                                        <li><i class="fas fa-check"></i> ${plan.max_storage_mb}MB Storage</li>
-                                        <li><i class="fas fa-check"></i> ${plan.max_domains} Domínios</li>
-                                        <li><i class="fas fa-check"></i> ${plan.max_subdomains} Subdomínios</li>
-                                    </ul>
-                                    <button class="upgrade-button ${isCurrentPlan ? 'current' : ''}"
-                                        onclick="${isCurrentPlan ? 'return false;' : 'upgradePlan(' + plan.id + ')'}"
-                                        ${isCurrentPlan ? 'disabled' : ''}>
-                                        ${isCurrentPlan ? 'Plano Atual' : 'Fazer Upgrade'}
-                                    </button>
-                                </div>
-                            `;
+                        <div class="plan-card ${isCurrentPlan ? 'current' : ''}" data-display-order="${plan.display_order}">
+                            ${isCurrentPlan ? '<div class="current-badge">Plano Atual</div>' : ''}
+                            <div class="plan-name-header">${plan.name}</div>
+                            <div class="plan-price">R$ ${parseFloat(plan.price).toFixed(2)}</div>
+                            <div class="plan-price-period">por mês</div>
+                            <ul class="plan-features">
+                                <li><i class="fas fa-check"></i> ${plan.max_projects} Projetos</li>
+                                <li><i class="fas fa-check"></i> ${plan.can_access_premium ? 'Acesso a Templates Premium' : 'Sem Acesso a Templates Premium'}</li>
+                                <li><i class="fas fa-check"></i> ${plan.max_domains} Domínios próprios</li>
+
+                            </ul>
+                            <button class="upgrade-button ${isCurrentPlan ? 'current' : ''}"
+                                onclick="${isCurrentPlan ? 'return false;' : 'upgradePlan(' + plan.id + ')'}"
+                                ${isCurrentPlan ? 'disabled' : ''}>
+                                ${isCurrentPlan ? 'Plano Atual' : 'Fazer Upgrade'}
+                            </button>
+                        </div>
+                    `;
                         container.innerHTML += planHTML;
                     });
+                    disableLowerPlans();
+
                 }
             });
     }
@@ -1032,6 +1050,38 @@
         if (event.target == modal) {
             modal.classList.remove('show');
         }
+    }
+
+    // Desabilitar botões de planos inferiores ou iguais
+    function disableLowerPlans() {
+        const currentPlanName = '<?= $planData['name'] ?? 'Gratuito' ?>';
+
+        // Buscar o display_order do plano atual
+        let currentPlanOrder = null;
+        document.querySelectorAll('.plan-card').forEach(card => {
+            const planName = card.querySelector('.plan-name-header')?.textContent.trim();
+            if (planName === currentPlanName) {
+                currentPlanOrder = parseInt(card.getAttribute('data-display-order')) || 0;
+            }
+        });
+
+        if (currentPlanOrder === null) {
+            console.warn('Plano atual não encontrado:', currentPlanName);
+            return;
+        }
+
+        // Desabilitar planos com display_order menor ou igual
+        document.querySelectorAll('.upgrade-button').forEach(btn => {
+            const planCard = btn.closest('.plan-card');
+            const planDisplayOrder = parseInt(planCard.getAttribute('data-display-order')) || 0;
+
+            if (planDisplayOrder <= currentPlanOrder) {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+                btn.style.opacity = '0.5';
+                btn.textContent = planDisplayOrder === currentPlanOrder ? 'Plano Atual' : 'Chame no whatsapp ';
+            }
+        });
     }
 </script>
 

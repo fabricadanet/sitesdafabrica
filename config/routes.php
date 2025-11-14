@@ -253,7 +253,7 @@ switch ($cleanUri) {
 
     case '/admin/plans/list':
         header('Content-Type: application/json');
-        (new AdminController)->plansListJson();
+        (new AdminController)->plansList();
         break;
 
     case '/admin/subscription/create':
