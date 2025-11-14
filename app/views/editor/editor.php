@@ -1,5 +1,5 @@
 <?php
-// app/views/editor/editor.php
+// app/views/editor/editor.php - Editor Inteligente com CSS Variables
 
 $projectId  = $_GET['id'] ?? null;
 $templateId = $_GET['template'] ?? null;
@@ -12,11 +12,9 @@ $projectName  = "Novo Projeto";
 $projectData  = null;
 
 /* ============================================================
-   OPÇÃO 1 — Sempre usar o template salvo no projeto
+   CARREGAMENTO DO TEMPLATE
    ============================================================ */
 if ($projectId) {
-
-    // Buscar dados do projeto
     $stmt = $this->pdo->prepare("
         SELECT p.id, p.name, p.html_content, p.template_id, p.user_id,
                t.html_file, t.name AS template_name
@@ -34,31 +32,21 @@ if ($projectId) {
 
     $projectName = $projectData['name'];
 
-    // 1️⃣ PRIORIDADE: conteúdo salvo no projeto
     if (!empty($projectData['html_content'])) {
         $templateHtml = $projectData['html_content'];
     }
-
-    // 2️⃣ Caso não tenha conteúdo salvo, usa o template do projeto
     elseif (!empty($projectData['template_id']) && !empty($projectData['html_file'])) {
         $file = $_SERVER['DOCUMENT_ROOT'] . "/templates/{$projectData['html_file']}";
-
         if (file_exists($file)) {
             $templateHtml = file_get_contents($file);
         }
     }
 
-    // Se mesmo assim não encontrou → fallback
     if (!$templateHtml) {
         $templateHtml = "<h1>Template vazio</h1><p>Nenhum conteúdo encontrado.</p>";
     }
 }
-
-/* ============================================================
-   PROJETO NOVO: usar o template passado via GET
-   ============================================================ */
 elseif ($templateId) {
-
     $stmt = $this->pdo->prepare("
         SELECT id, html_file, name 
         FROM templates_library 
@@ -69,7 +57,6 @@ elseif ($templateId) {
 
     if ($tpl) {
         $projectName = $tpl['name'];
-
         $file = __DIR__ . "/../../public/templates/{$tpl['html_file']}";
         if (file_exists($file)) {
             $templateHtml = file_get_contents($file);
@@ -80,10 +67,6 @@ elseif ($templateId) {
         $templateHtml = "<h1>Template vazio</h1><p>Nenhum conteúdo encontrado.</p>";
     }
 }
-
-/* ============================================================
-   Se NENHUMA opção carregou: fallback
-   ============================================================ */
 else {
     $templateHtml = "<h1>Template vazio</h1><p>Nenhum conteúdo encontrado.</p>";
 }
@@ -93,110 +76,266 @@ else {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor - Sites da Fábrica</title>
+    <title>Editor Inteligente - Sites da Fábrica</title>
 
     <link rel="stylesheet" href="/assets/css/editor.css">
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
     <style>
-        .panel {
-            margin-bottom: 1rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            background: #fff;
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
         }
 
-        .panel-header {
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        header .brand {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        .btn-logout {
+            background: #ef4444;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+
+        main {
+            display: flex;
+            height: calc(100vh - 60px);
+            gap: 0;
+        }
+
+        .preview {
+            flex: 1;
+            display: flex;
+            background: white;
+            min-width: 0;
+        }
+
+        #editorFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #sidebar {
+            width: 380px;
+            background: #fff;
+            border-left: 1px solid #e5e7eb;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: -1px 0 3px rgba(0,0,0,0.05);
+        }
+
+        #sidebar h5 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.75rem;
             background: #f3f4f6;
-            border-bottom: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
             cursor: pointer;
             user-select: none;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e5e7eb;
         }
 
-        .panel-header:hover {
+        .category-header:hover {
             background: #e5e7eb;
         }
 
-        .panel-header h6 {
+        .category-header h6 {
             margin: 0;
             font-size: 0.875rem;
             font-weight: 600;
             color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .collapse-icon {
-            display: inline-flex;
+        .collapse-toggle {
+            display: flex;
             align-items: center;
             justify-content: center;
+            width: 20px;
+            height: 20px;
             transition: transform 0.3s ease;
             font-size: 0.75rem;
-        }
-
-        .panel-content {
-            padding: 0.75rem;
-            max-height: 1000px;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-        }
-
-        .panel-content.collapsed {
-            max-height: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-
-        .collapse-icon.rotated {
-            transform: rotate(180deg);
-        }
-
-        .form-label {
-            display: block;
-            margin-top: 0.5rem;
-            margin-bottom: 0.25rem;
-            font-size: 0.75rem;
-            font-weight: 500;
             color: #6b7280;
         }
 
-        .form-control {
-            width: 100%;
-            padding: 0.375rem 0.5rem;
-            font-size: 0.875rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.25rem;
-            box-sizing: border-box;
+        .collapse-toggle.rotated {
+            transform: rotate(180deg);
         }
 
-        .form-control:focus {
+        .category-content {
+            max-height: 5000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .category-content.collapsed {
+            max-height: 0;
+        }
+
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field-input:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .mt-2 {
-            margin-top: 0.5rem;
+        textarea.field-input {
+            resize: vertical;
+            min-height: 80px;
         }
 
-        .mb-2 {
+        input[type="color"].field-input {
+            height: 40px;
+            padding: 0.25rem;
+            cursor: pointer;
+        }
+
+        input[type="range"].field-input {
+            height: 6px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 120px;
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
             margin-bottom: 0.5rem;
         }
 
-        .mb-3 {
-            margin-bottom: 0.75rem;
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
         }
 
-        .small {
+        .image-preview.empty {
+            color: #9ca3af;
             font-size: 0.75rem;
+            text-align: center;
         }
 
-        .text-muted {
-            color: #6b7280;
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: 40vh;
+                border-left: none;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            .preview {
+                height: 60vh;
+            }
         }
     </style>
 </head>
@@ -204,7 +343,7 @@ else {
 <body>
 
 <header>
-    <div class="brand">⚡ Sites da Fábrica — Editor</div>
+    <div class="brand">⚡ Sites da Fábrica — Editor Inteligente</div>
     <div class="actions">
         <button id="saveProject" class="btn">💾 Salvar</button>
         <button id="downloadSite" class="btn">⬇️ Baixar</button>
@@ -215,40 +354,17 @@ else {
 </header>
 
 <main>
-
     <div class="preview">
         <iframe id="editorFrame"></iframe>
     </div>
 
-    <aside id="sidebar" style="width:340px;background:#f9fafb;border-left:1px solid #ddd;overflow-y:auto;padding:1rem;">
-        <h5>🧱 Editor</h5>
-
-        <div id="panel-vars" class="panel">
-            <div class="panel-header" onclick="togglePanel('panel-vars')">
-                <h6>🎨 Variáveis Globais</h6>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div id="vars-container" class="panel-content"></div>
-        </div>
-
-        <div id="panel-texts" class="panel">
-            <div class="panel-header" onclick="togglePanel('panel-texts')">
-                <h6>🖋️ Textos</h6>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div id="texts-container" class="panel-content"></div>
-        </div>
-
-        <div id="panel-images" class="panel">
-            <div class="panel-header" onclick="togglePanel('panel-images')">
-                <h6>🖼️ Imagens</h6>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div id="images-container" class="panel-content"></div>
-        </div>
-
+    <aside id="sidebar">
+        <h5>
+            <span>🧱</span>
+            Editor de Conteúdo
+        </h5>
+        <div id="categories-container"></div>
     </aside>
-
 </main>
 
 <script>
@@ -260,17 +376,299 @@ else {
     const iframe = document.getElementById("editorFrame");
     let iframeDoc = null;
 
-    // Função para expandir/colapsar painéis
-    function togglePanel(panelId) {
-        const panel = document.getElementById(panelId);
-        const content = panel.querySelector('.panel-content');
-        const icon = panel.querySelector('.collapse-icon');
+    // Categorias e padrões
+    const categoryConfigs = {
+        imagens: {
+            name: '🖼️ Imagens',
+            patterns: [/img|image|foto|picture|icon|logo|banner|hero/i],
+            inputType: 'file'
+        },
+        cores: {
+            name: '🎨 Cores & Temas',
+            patterns: [/cor|color|theme|background|bg|fundo/i],
+            inputType: 'color'
+        },
+        textos: {
+            name: '📝 Textos & Conteúdo',
+            patterns: [/texto|text|titulo|title|descri|content|nome|name|paragraph|description/i],
+            inputType: 'textarea'
+        },
+        links: {
+            name: '🔗 Links & URLs',
+            patterns: [/url|link|href|whatsapp|email|phone|contact/i],
+            inputType: 'url'
+        },
+        seo: {
+            name: '📊 SEO & Metadados',
+            patterns: [/seo|meta|google|tiktok|hotjar|outras|fb|other|keyword|description|title|og:|canonical/i],
+            inputType: 'textarea'
+        },
+        espacamento: {
+            name: '📐 Espaçamento & Layout',
+            patterns: [/padding|margin|gap|spacing|size|width|height|tamanho/i],
+            inputType: 'number'
+        },
+        efeitos: {
+            name: '✨ Efeitos & Animações',
+            patterns: [/shadow|sombra|border|animation|transition|opacity|blur|effect/i],
+            inputType: 'range'
+        }
+    };
 
-        content.classList.toggle('collapsed');
-        icon.classList.toggle('rotated');
+    function categorizeField(key, element) {
+        if (element && element.tagName === 'IMG') {
+            return 'imagens';
+        }
+
+        for (const [categoryKey, config] of Object.entries(categoryConfigs)) {
+            if (config.patterns.some(pattern => pattern.test(key))) {
+                return categoryKey;
+            }
+        }
+
+        if (element && element.tagName === 'A') return 'links';
+        return 'textos';
     }
 
-    window.addEventListener("load", () => {
+    function extractCSSVariables(categories) {
+        if (!iframeDoc.documentElement) return;
+
+        const styleTag = iframeDoc.querySelector('style');
+        if (!styleTag) return;
+
+        const cssText = styleTag.textContent || '';
+        const varMatches = cssText.match(/--[\w-]+\s*:\s*[^;]+/g) || [];
+
+        varMatches.forEach(match => {
+            const [varName, ...valueParts] = match.split(':');
+            const varNameTrimmed = varName.trim();
+            const value = valueParts.join(':').trim();
+
+            if (!varNameTrimmed.startsWith('--')) return;
+
+            const key = varNameTrimmed.substring(2);
+            const category = categorizeField(key, { tagName: 'STYLE' });
+
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+
+            const exists = categories[category].some(item => item.key === key);
+            if (!exists) {
+                categories[category].push({
+                    key,
+                    element: null,
+                    isCSSVar: true,
+                    varName: varNameTrimmed,
+                    value: value
+                });
+            }
+        });
+    }
+
+    function buildSidebar() {
+        const container = document.getElementById('categories-container');
+        container.innerHTML = '';
+
+        const categories = {};
+
+        // Agrupa elementos com data-edit
+        const allElements = iframeDoc.querySelectorAll('[data-edit]');
+        allElements.forEach(el => {
+            const key = el.dataset.edit;
+            const category = categorizeField(key, el);
+
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+
+            categories[category].push({ key, element: el });
+        });
+
+        // Extrai variáveis CSS
+        extractCSSVariables(categories);
+
+        // Renderiza categorias
+        Object.keys(categories).sort().forEach(categoryKey => {
+            const config = categoryConfigs[categoryKey] || { name: categoryKey };
+            const fields = categories[categoryKey];
+
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category';
+            categoryDiv.innerHTML = `
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <h6>${config.name} [${fields.length}]</h6>
+                    <div class="collapse-toggle">▼</div>
+                </div>
+                <div class="category-content"></div>
+            `;
+
+            const contentDiv = categoryDiv.querySelector('.category-content');
+
+            fields.forEach(({ key, element, isCSSVar, varName, value }) => {
+                const fieldDiv = createFieldInput(key, element, config.inputType, isCSSVar, varName, value);
+                contentDiv.appendChild(fieldDiv);
+            });
+
+            container.appendChild(categoryDiv);
+        });
+    }
+
+    function createFieldInput(key, element, preferredType, isCSSVar, varName, cssValue) {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'field';
+
+        const label = document.createElement('label');
+        label.className = 'field-label';
+        label.textContent = key.replace(/[-_]/g, ' ').toUpperCase();
+
+        fieldDiv.appendChild(label);
+
+        // Variável CSS
+        if (isCSSVar) {
+            if (cssValue.includes('#') || cssValue.includes('rgb')) {
+                const input = document.createElement('input');
+                input.type = 'color';
+                input.className = 'field-input';
+                input.value = parseColorValue(cssValue) || '#3b82f6';
+                input.oninput = () => {
+                    iframeDoc.documentElement.style.setProperty(varName, input.value);
+                };
+                fieldDiv.appendChild(input);
+            } else if (cssValue.match(/^\d+/) || cssValue.includes('px') || cssValue.includes('rem')) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'field-input';
+                input.value = parseInt(cssValue) || 0;
+                input.oninput = () => {
+                    const unit = cssValue.match(/[a-z%]+/i)?.[0] || 'px';
+                    iframeDoc.documentElement.style.setProperty(varName, input.value + unit);
+                };
+                fieldDiv.appendChild(input);
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'field-input';
+                input.value = cssValue;
+                input.oninput = () => {
+                    iframeDoc.documentElement.style.setProperty(varName, input.value);
+                };
+                fieldDiv.appendChild(input);
+            }
+            return fieldDiv;
+        }
+
+        // Elementos com data-edit
+        const tagName = element.tagName;
+        const currentValue = tagName === 'IMG' ? element.src : element.innerText || element.value || '';
+
+        if (tagName === 'IMG') {
+            const preview = document.createElement('div');
+            preview.className = 'image-preview';
+            preview.innerHTML = `<img src="${element.src}" alt="preview">`;
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.className = 'field-input';
+
+            fileInput.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    element.src = ev.target.result;
+                    preview.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
+                };
+                reader.readAsDataURL(file);
+            };
+
+            fieldDiv.appendChild(preview);
+            fieldDiv.appendChild(fileInput);
+        } else if (preferredType === 'color') {
+            const input = document.createElement('input');
+            input.type = 'color';
+            input.className = 'field-input';
+            input.value = parseColorValue(currentValue) || '#3b82f6';
+            input.oninput = () => {
+                element.innerText = input.value;
+                iframeDoc.documentElement.style.setProperty('--' + key, input.value);
+            };
+            fieldDiv.appendChild(input);
+        } else if (preferredType === 'range') {
+            const input = document.createElement('input');
+            input.type = 'range';
+            input.className = 'field-input';
+            input.min = '0';
+            input.max = '100';
+            input.value = parseInt(currentValue) || 50;
+
+            const valueSpan = document.createElement('span');
+            valueSpan.className = 'field-label';
+            valueSpan.textContent = input.value + '%';
+
+            input.oninput = () => {
+                valueSpan.textContent = input.value + '%';
+                iframeDoc.documentElement.style.setProperty('--' + key, input.value);
+            };
+
+            fieldDiv.appendChild(input);
+            fieldDiv.appendChild(valueSpan);
+        } else if (preferredType === 'url' || tagName === 'A') {
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.className = 'field-input';
+            input.value = element.href || currentValue;
+            input.placeholder = 'https://...';
+            input.oninput = () => {
+                if (tagName === 'A') {
+                    element.href = input.value;
+                } else {
+                    element.innerText = input.value;
+                }
+            };
+            fieldDiv.appendChild(input);
+        } else if (currentValue.includes('\n') || currentValue.length > 50) {
+            const textarea = document.createElement('textarea');
+            textarea.className = 'field-input';
+            textarea.value = currentValue;
+            textarea.oninput = () => element.innerText = textarea.value;
+            fieldDiv.appendChild(textarea);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'field-input';
+            input.value = currentValue;
+            input.oninput = () => element.innerText = input.value;
+            fieldDiv.appendChild(input);
+        }
+
+        return fieldDiv;
+    }
+
+    function parseColorValue(value) {
+        if (value.startsWith('#')) return value;
+        if (value.startsWith('rgb')) {
+            const match = value.match(/\d+/g);
+            if (match && match.length >= 3) {
+                return '#' + match.slice(0, 3).map(x => {
+                    const hex = parseInt(x).toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('');
+            }
+        }
+        return null;
+    }
+
+    function toggleCategory(header) {
+        const content = header.nextElementSibling;
+        const toggle = header.querySelector('.collapse-toggle');
+
+        content.classList.toggle('collapsed');
+        toggle.classList.toggle('rotated');
+    }
+
+    window.addEventListener('load', () => {
         iframeDoc = iframe.contentDocument;
         iframeDoc.open();
         iframeDoc.write(INITIAL_HTML);
@@ -281,143 +679,51 @@ else {
 
     function tryBuildSidebar(attempt) {
         if (attempt > 10) return;
-        if (iframeDoc.body.querySelectorAll("[data-edit]").length > 0) {
+        if (iframeDoc.body && iframeDoc.querySelector('style')) {
             buildSidebar();
             return;
         }
         setTimeout(() => tryBuildSidebar(attempt + 1), 150);
     }
 
-    function buildSidebar() {
-
-        const varsContainer   = document.getElementById("vars-container");
-        const textsContainer  = document.getElementById("texts-container");
-        const imagesContainer = document.getElementById("images-container");
-
-        // Variáveis CSS
-        const styles = getComputedStyle(iframeDoc.documentElement);
-        const vars = [...styles].filter(name => name.startsWith("--"));
-
-        varsContainer.innerHTML = "";
-        vars.forEach(name => {
-            const value = styles.getPropertyValue(name).trim();
-
-            const label = document.createElement("label");
-            label.className = "form-label small text-muted mt-2";
-            label.textContent = name;
-
-            const input = document.createElement("input");
-            input.type = value.match(/^#|rgb|hsl/) ? "color" : "text";
-            input.value = value;
-            input.className = "form-control mb-2";
-
-            input.oninput = () => {
-                iframeDoc.documentElement.style.setProperty(name, input.value);
-            };
-
-            varsContainer.appendChild(label);
-            varsContainer.appendChild(input);
-        });
-
-        // Textos
-        const textEls = iframeDoc.querySelectorAll("[data-edit]:not(img)");
-        textsContainer.innerHTML = "";
-
-        textEls.forEach(el => {
-            const name = el.dataset.edit;
-
-            const label = document.createElement("label");
-            label.className = "form-label small text-muted mt-2";
-            label.textContent = name;
-
-            const textarea = document.createElement("textarea");
-            textarea.className = "form-control mb-2";
-            textarea.rows = 2;
-            textarea.value = el.innerText.trim();
-            textarea.oninput = () => el.innerText = textarea.value;
-
-            textsContainer.appendChild(label);
-            textsContainer.appendChild(textarea);
-        });
-
-        // Imagens
-        const imgs = iframeDoc.querySelectorAll("img[data-edit]");
-        imagesContainer.innerHTML = "";
-
-        imgs.forEach(img => {
-            const name = img.dataset.edit;
-
-            const label = document.createElement("label");
-            label.className = "form-label small text-muted mt-2";
-            label.textContent = name;
-
-            const preview = document.createElement("img");
-            preview.src = img.src;
-            preview.style.width = "100%";
-
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = "image/*";
-            input.className = "form-control mb-3";
-
-            input.onchange = e => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    img.src = ev.target.result;
-                    preview.src = ev.target.result;
-                };
-                reader.readAsDataURL(file);
-            };
-
-            imagesContainer.appendChild(label);
-            imagesContainer.appendChild(preview);
-            imagesContainer.appendChild(input);
-        });
-    }
-
-    // SALVAR
-    document.getElementById("saveProject").onclick = async () => {
-
+    document.getElementById('saveProject').onclick = async () => {
         const html = iframeDoc.documentElement.outerHTML;
-
         const form = new FormData();
-        form.append("id", PROJECT_ID || "");
-        form.append("name", PROJECT_NAME);
-        form.append("html", html);
+        form.append('id', PROJECT_ID || '');
+        form.append('name', PROJECT_NAME);
+        form.append('html', html);
 
         if (TEMPLATE_ID) {
-            form.append("template_id", TEMPLATE_ID);
+            form.append('template_id', TEMPLATE_ID);
         }
 
-        const res  = await fetch("/projects/save", { method: "POST", body: form });
+        const res = await fetch('/projects/save', { method: 'POST', body: form });
         const data = await res.json();
 
         if (data.success) {
-            alert("Projeto salvo!");
+            alert('Projeto salvo!');
             if (!PROJECT_ID && data.project_id) {
-                window.location.href = "/editor?id=" + data.project_id;
+                window.location.href = '/editor?id=' + data.project_id;
             }
         } else {
-            alert("Erro ao salvar o projeto");
+            alert('Erro ao salvar o projeto');
         }
     };
 
-    // PREVIEW
-    document.getElementById("preview").onclick = () => {
-        const blob = new Blob([iframeDoc.documentElement.outerHTML], { type: "text/html" });
-        const url  = URL.createObjectURL(blob);
-        window.open(url, "_blank");
+    document.getElementById('preview').onclick = () => {
+        const blob = new Blob([iframeDoc.documentElement.outerHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
     };
 
-    // DOWNLOAD
-    document.getElementById("downloadSite").onclick = async () => {
-        const zip  = new JSZip();
-        zip.file("index.html", iframeDoc.documentElement.outerHTML);
-        const blob = await zip.generateAsync({ type: "blob" });
-        saveAs(blob, PROJECT_NAME + ".zip");
+    document.getElementById('downloadSite').onclick = async () => {
+        const zip = new JSZip();
+        zip.file('index.html', iframeDoc.documentElement.outerHTML);
+        const blob = await zip.generateAsync({ type: 'blob' });
+        saveAs(blob, PROJECT_NAME + '.zip');
     };
+
+    window.toggleCategory = toggleCategory;
 </script>
 
 </body>
