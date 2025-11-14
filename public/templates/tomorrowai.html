@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Produto AI — Landing</title>
+
+  <!-- Inline CSS -->
+  <style>
+    :root{
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #94a3b8;
+      --accent: #6ee7b7;
+      --accent-2: #60a5fa;
+      --glass: rgba(255,255,255,0.04);
+      --radius: 14px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:
+      linear-gradient(180deg,#071028 0%, #081427 60%), radial-gradient(800px 400px at 10% 10%, rgba(96,165,250,0.06), transparent 10%),
+      linear-gradient(600px 300px at 90% 90%, rgba(110,231,183,0.04), transparent 10%); color:#e6eef8;}
+    a{color:inherit;text-decoration:none}
+    header{
+      position:sticky; top:0; z-index:40;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(180deg, rgba(8,12,20,0.6), rgba(8,12,20,0.28));
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .container{max-width:1100px;margin:0 auto;padding:20px;}
+    .nav{display:flex;align-items:center;gap:20px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700}
+    .logo{
+      width:44px;height:44px;border-radius:10px;
+      background: linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:grid;place-items:center;color:#042028;font-weight:800;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    }
+    nav .links{display:flex;gap:14px;align-items:center}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:#042028;font-weight:700;border:none;cursor:pointer;
+      box-shadow: 0 8px 30px rgba(96,165,250,0.08), inset 0 -2px 0 rgba(255,255,255,0.06);
+    }
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--muted);}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:32px;align-items:center;padding:60px 0}
+    .eyebrow{font-size:13px;color:var(--accent);font-weight:700;background:rgba(110,231,183,0.06);display:inline-block;padding:6px 10px;border-radius:999px}
+    h1{font-size:40px;line-height:1.04;margin:14px 0 8px}
+    p.lead{color:var(--muted);margin:0 0 18px;max-width:60ch}
+    .actions{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--radius); padding:20px; box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* mock product panel */
+    .panel{
+      width:100%; height:380px; border-radius:12px; overflow:hidden; position:relative;
+      background:
+        linear-gradient(180deg, rgba(12,18,28,0.85), rgba(6,10,16,0.6));
+      display:flex;flex-direction:column;
+    }
+    .panel .top{display:flex;justify-content:space-between;padding:14px 16px;align-items:center}
+    .dots{display:flex;gap:8px}
+    .dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.06)}
+    .panel .content{flex:1;padding:10px 16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+    .mock-graph{
+      width:100%;height:180px;border-radius:8px;background:
+        linear-gradient(180deg,#061425,#06202b);
+      display:flex;align-items:flex-end;padding:12px;gap:8px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .bar{width:10%;height:40%;background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:6px;display:inline-block}
+
+    /* Features */
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:46px 0}
+    .feature{padding:18px;border-radius:12px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
+    .feature h4{margin:8px 0 6px}
+    .feature p{color:var(--muted);margin:0;font-size:14px}
+
+    /* CTA strip */
+    .cta-strip{display:flex;justify-content:space-between;align-items:center;padding:18px;border-radius:12px;background:linear-gradient(90deg, rgba(96,165,250,0.06), rgba(110,231,183,0.03));margin:36px 0}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* Footer */
+    footer{padding:26px 0;color:var(--muted);border-top:1px solid rgba(255,255,255,0.03)}
+
+    /* Responsive */
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr;gap:22px}
+      .panel{height:320px}
+      .features{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:640px){
+      .nav{padding:0 8px}
+      .links{display:none}
+      .brand {gap:8px}
+      .features{grid-template-columns:1fr}
+      h1{font-size:28px}
+      .panel{height:260px}
+    }
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:999px;font-size:13px}
+    .grid{display:grid;gap:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <div style="font-size:15px">Tomorrow-like</div>
+          <div class="muted" style="font-size:12px;margin-top:-2px">Soluções de IA • Demo</div>
+        </div>
+      </div>
+
+      <div class="links">
+        <a class="ghost" href="#features">Recursos</a>
+        <a class="ghost" href="#precos">Preços</a>
+        <a class="ghost" href="#contato">Contato</a>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="ghost" id="themeToggle" title="Alternar tema">🌙</button>
+        <button class="btn" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Comece grátis</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <section class="hero" aria-label="hero">
+      <div>
+        <span class="eyebrow">Demo AI • Automação</span>
+        <h1>Automatize tarefas com modelos de IA prontos para produção</h1>
+        <p class="lead">Integre assistentes, geração de conteúdo e análises automatizadas usando APIs e fluxos personalizados — sem infra complexa.</p>
+
+        <div class="actions">
+          <button class="btn" onclick="alert('Iniciar demo')">Testar demo</button>
+          <a class="ghost" href="#features">Ver recursos</a>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;align-items:center">
+          <div class="card" style="display:flex;gap:12px;align-items:center">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.06)" stroke-width="1.2"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <div>
+              <div style="font-weight:700">Deploy em minutos</div>
+              <div class="muted" style="font-size:13px">SDKs, webhooks e templates prontos</div>
+            </div>
+          </div>
+
+          <div class="card" style="display:flex;gap:12px;align-items:center">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="3" y="4" width="18" height="16" rx="3" stroke="rgba(255,255,255,0.06)"/></svg>
+            <div>
+              <div style="font-weight:700">Escalável</div>
+              <div class="muted" style="font-size:13px">Arquitetura preparada para tráfego real</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- mock product panel -->
+      <div class="card panel" aria-hidden="true">
+        <div class="top">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.06)"></div>
+            <div class="muted" style="font-size:13px">Console • Produção</div>
+          </div>
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+            <div>
+              <div style="font-size:13px" class="muted">Requests / mês</div>
+              <div style="font-weight:700;font-size:18px">28.4k</div>
+            </div>
+            <div class="pill">Latência média <strong style="margin-left:6px">87ms</strong></div>
+          </div>
+
+          <div class="mock-graph" style="margin-top:8px">
+            <div style="display:flex;width:100%;align-items:flex-end;gap:6px;height:100%">
+              <div class="bar" style="height:22%"></div>
+              <div class="bar" style="height:34%"></div>
+              <div class="bar" style="height:48%"></div>
+              <div class="bar" style="height:28%"></div>
+              <div class="bar" style="height:68%"></div>
+              <div class="bar" style="height:44%"></div>
+              <div class="bar" style="height:74%"></div>
+              <div class="bar" style="height:52%"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <div class="small muted">Modelos ativados</div>
+            <div class="pill">chat-b2</div>
+            <div class="pill">text-gen</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div style="display:flex;justify-content:space-between;align-items:end">
+        <div>
+          <h2 style="margin:6px 0 0">O que oferecemos</h2>
+          <div class="muted" style="margin-top:6px">Ferramentas para construir produtos com IA rapidamente</div>
+        </div>
+        <div class="muted">Integrável • Seguro • Observability</div>
+      </div>
+
+      <div class="features" style="margin-top:20px">
+        <div class="feature card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2v20" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h4>Assistentes personalizados</h4>
+          <p>Crie fluxos conversacionais com memória, contexto e persona – prontos para seu domínio.</p>
+        </div>
+
+        <div class="feature card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor"/></svg>
+          <h4>APIs e Webhooks</h4>
+          <p>Conecte seu backend e automatize rotinas com chamadas leves e webhook events.</p>
+        </div>
+
+        <div class="feature card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor"/></svg>
+          <h4>Observability</h4>
+          <p>Métricas, logs e dashboards para monitorar performance e custos.</p>
+        </div>
+
+        <div class="feature card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 12h18" stroke="currentColor"/></svg>
+          <h4>Segurança e permissões</h4>
+          <p>Controle de acesso, chaves rotacionáveis e logs de auditoria.</p>
+        </div>
+
+        <div class="feature card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor"/></svg>
+          <h4>Modelos gerenciados</h4>
+          <p>Escolha entre modelos otimizados por custo/latência para seu uso.</p>
+        </div>
+
+        <div class="feature card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 4l4 4-4 4-4-4z" stroke="currentColor"/></svg>
+          <h4>SDKs e Starter Kits</h4>
+          <p>Bibliotecas client e amostras para acelerar a integração.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA / Pricing -->
+    <section id="precos">
+      <div class="cta-strip">
+        <div>
+          <div style="font-weight:700">Pronto para levar seu produto ao próximo nível?</div>
+          <div class="small muted">Teste a plataforma gratuitamente por 14 dias — sem cartão.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="ghost" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Comece grátis</button>
+          <button class="btn" onclick="alert('Contato comercial')">Falar com vendas</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:18px">
+        <div class="card" style="flex:1;min-width:240px">
+          <div style="font-weight:700">Starter</div>
+          <div class="muted" style="margin:8px 0">Ideal para protótipos e testes</div>
+          <div style="font-size:22px;font-weight:800;margin:12px 0">R$0 / mês</div>
+          <ul class="muted" style="margin:0;padding-left:18px">
+            <li>1000 chamadas / mês</li>
+            <li>Suporte por e-mail</li>
+          </ul>
+        </div>
+
+        <div class="card" style="flex:1;min-width:240px;border:2px solid rgba(96,165,250,0.12)">
+          <div style="font-weight:700">Business</div>
+          <div class="muted" style="margin:8px 0">Uso comercial leve</div>
+          <div style="font-size:22px;font-weight:800;margin:12px 0">R$199 / mês</div>
+          <ul class="muted" style="margin:0;padding-left:18px">
+            <li>50k chamadas / mês</li>
+            <li>SLAs e suporte prioritário</li>
+          </ul>
+        </div>
+
+        <div class="card" style="flex:1;min-width:240px">
+          <div style="font-weight:700">Enterprise</div>
+          <div class="muted" style="margin:8px 0">Escala e personalização</div>
+          <div style="font-size:22px;font-weight:800;margin:12px 0">Sob consulta</div>
+          <ul class="muted" style="margin:0;padding-left:18px">
+            <li>Suporte dedicado</li>
+            <li>Integração on-premise</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Signup form -->
+    <section id="signup" style="margin-top:36px">
+      <div class="card" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <div style="font-weight:700">Crie sua conta gratuita</div>
+          <div class="muted" style="margin-top:6px">Sem cartão — comece a experimentar em minutos</div>
+        </div>
+        <form onsubmit="event.preventDefault(); signup()" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="email" type="email" placeholder="seu@exemplo.com" required style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;min-width:220px">
+          <button class="btn" type="submit">Criar conta</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div class="muted">© <strong>Tomorrow-like</strong> — Construído com ❤️ • Versão de demonstração</div>
+      <div style="display:flex;gap:12px">
+        <a class="muted" href="#contato">Privacidade</a>
+        <a class="muted" href="#contato">Termos</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Inline JavaScript -->
+  <script>
+    // small helpers: theme toggle + signup demo
+    (function(){
+      const btn = document.getElementById('themeToggle');
+      btn.addEventListener('click', function(){
+        const dark = document.documentElement.style.getPropertyValue('--bg') === '#0f1724';
+        if(dark){
+          // light-ish
+          document.documentElement.style.setProperty('--bg','#f7fafc');
+          document.documentElement.style.setProperty('--card','#ffffff');
+          document.documentElement.style.setProperty('--muted','#475569');
+          document.documentElement.style.setProperty('--accent','#7c3aed');
+          document.documentElement.style.setProperty('--accent-2','#06b6d4');
+          document.body.style.background = '#f6f8fb';
+          btn.textContent = '🌙';
+        } else {
+          // revert dark
+          document.documentElement.style.setProperty('--bg','#0f1724');
+          document.documentElement.style.setProperty('--card','#0b1220');
+          document.documentElement.style.setProperty('--muted','#94a3b8');
+          document.documentElement.style.setProperty('--accent','#6ee7b7');
+          document.documentElement.style.setProperty('--accent-2','#60a5fa');
+          document.body.style.background = '';
+          btn.textContent = '☀️';
+        }
+      });
+
+      window.signup = function(){
+        const email = document.getElementById('email').value;
+        if(!email) return alert('Informe um email válido');
+        // demo feedback (replace by actual request)
+        alert('Obrigado! Verificamos ' + email + '. Um link de ativação foi (simulado) enviado.');
+        document.getElementById('email').value = '';
+      };
+
+      // subtle reveal on scroll for feature cards
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(e=>{
+          if(e.isIntersecting) e.target.style.transform = 'translateY(0)'; 
+        })
+      }, {threshold:0.12});
+      document.querySelectorAll('.feature').forEach(el=>{
+        el.style.transform = 'translateY(12px)';
+        el.style.transition = 'transform 520ms cubic-bezier(.2,.9,.2,1)';
+        io.observe(el);
+      });
+    })();
+  </script>
+</body>
+</html>
