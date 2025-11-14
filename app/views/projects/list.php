@@ -1,9 +1,8 @@
 <?php
 // app/views/projects/list.php
-// Dashboard do usuário com cards informativos e gerenciamento de plano
-// MELHORADO: Adicionados botões de logout e painel admin
-require_once __DIR__ . '/../../helpers/subscription.php';
+// Dashboard completo com deploy, domínios, CDN e analytics
 
+require_once __DIR__ . '/../../helpers/subscription.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -28,7 +27,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
         }
 
         .container-main {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -161,10 +160,6 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             text-decoration: none;
         }
 
-        .btn-logout:active {
-            transform: translateY(0);
-        }
-
         /* ===== CARDS INFORMATIVOS ===== */
         .cards-section {
             display: grid;
@@ -289,9 +284,29 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             font-size: 13px;
         }
 
+        .project-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-published {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-draft {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
         .project-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn-action {
@@ -302,18 +317,70 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             font-size: 12px;
             font-weight: 600;
             transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-edit {
             background: #e3f2fd;
             color: #1976d2;
-            text-decoration: none;
         }
 
         .btn-edit:hover {
             background: #bbdefb;
             color: #1565c0;
-            text-decoration: none;
+        }
+
+        .btn-publish {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .btn-publish:hover {
+            background: #a7f3d0;
+            color: #047857;
+        }
+
+        .btn-unpublish {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-unpublish:hover {
+            background: #fde68a;
+            color: #b45309;
+        }
+
+        .btn-view {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .btn-view:hover {
+            background: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .btn-domains {
+            background: #e9d5ff;
+            color: #9333ea;
+        }
+
+        .btn-domains:hover {
+            background: #d8b4fe;
+            color: #7e22ce;
+        }
+
+        .btn-cache {
+            background: #fce7f3;
+            color: #db2777;
+        }
+
+        .btn-cache:hover {
+            background: #fbcfe8;
+            color: #be185d;
         }
 
         .btn-delete {
@@ -357,19 +424,60 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             background: #5568d3;
         }
 
-        /* ===== MODALS ===== */
+        /* ===== MODAIS ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .modal-content {
-            border: none;
+            background-color: white;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
             border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .modal-header {
             background: #f9fafb;
             border-bottom: 1px solid #eee;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .modal-header .modal-title {
             font-weight: 700;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .close:hover {
             color: #333;
         }
 
@@ -389,7 +497,8 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             font-size: 14px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group textarea {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #ddd;
@@ -398,7 +507,8 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             transition: border-color 0.3s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -447,131 +557,185 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             background: #ddd;
         }
 
-        /* ===== UPGRADE CARDS ===== */
-        .upgrade-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .plan-card {
-            background: white;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .plan-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-        }
-
-        .plan-card.current {
-            border-color: #667eea;
-            background: #f9fafb;
-        }
-
-        .plan-name-header {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .plan-price {
-            font-size: 24px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .plan-price-period {
-            color: #999;
-            font-size: 14px;
-        }
-
-        .plan-features {
+        /* ===== DOMAIN LIST ===== */
+        .domain-list {
             list-style: none;
-            margin: 15px 0;
+            padding: 0;
+            margin: 20px 0;
         }
 
-        .plan-features li {
-            padding: 8px 0;
-            color: #666;
-            font-size: 13px;
+        .domain-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
+        }
+
+        .domain-info {
+            flex: 1;
+        }
+
+        .domain-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .domain-status {
+            font-size: 12px;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .domain-status.verified {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .domain-status.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .domain-actions {
+            display: flex;
             gap: 8px;
         }
 
-        .plan-features i {
-            color: #4caf50;
+        .dns-instructions {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .dns-instructions pre {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0 0 0;
             font-size: 12px;
         }
 
-        .upgrade-button {
-            width: 100%;
-            background: #667eea;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 15px;
-        }
-
-        .upgrade-button:hover {
-            background: #5568d3;
-        }
-
-        .upgrade-button.current {
-            background: #ddd;
-            color: #666;
-            cursor: default;
-        }
-
-        .upgrade-button.current:hover {
-            background: #ddd;
-        }
-
-        .current-badge {
-            display: inline-block;
-            background: #4caf50;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        /* ===== PROFILE SECTION ===== */
-        .profile-section {
+        /* ===== ANALYTICS SECTION ===== */
+        .analytics-section {
             background: white;
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
         }
 
-        .btn-update-profile {
-            background: #667eea;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
+        /* ===== TEMPLATES GRID ===== */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .template-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 15px;
+            position: relative;
         }
 
-        .btn-update-profile:hover {
-            background: #5568d3;
+        .template-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .template-card.template-premium {
+            border-color: #8b5cf6;
+        }
+
+        .template-card.template-premium:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.25);
+        }
+
+        .badge-premium {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.5);
+        }
+
+        .template-thumb {
+            width: 100%;
+            height: 160px;
+            background: #f9fafb;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .template-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .template-card:hover .template-thumb img {
+            transform: scale(1.05);
+        }
+
+        .template-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #d1d5db;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        }
+
+        .template-info {
+            padding: 15px;
+        }
+
+        .template-info h6 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .template-card.template-premium .template-info h6 {
+            color: #7c3aed;
+        }
+
+        .template-info p {
+            margin: 0;
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.5;
         }
 
         @media (max-width: 768px) {
@@ -598,7 +762,148 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             .projects-table td {
                 padding: 12px 8px;
             }
+
+            .project-actions {
+                flex-direction: column;
+            }
+
+            .templates-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
         }
+    /* ===== UPGRADE CARDS ===== */
+    .upgrade-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .plan-card {
+        background: white;
+        border: 2px solid #eee;
+        border-radius: 12px;
+        padding: 24px;
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .plan-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        transform: translateY(-4px);
+    }
+
+    .plan-card.current {
+        border-color: #667eea;
+        background: #f9fafb;
+    }
+
+    .current-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #4caf50;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .plan-name-header {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .plan-price {
+        font-size: 32px;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+
+    .plan-price-period {
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .plan-features {
+        list-style: none;
+        margin: 20px 0;
+        padding: 0;
+    }
+
+    .plan-features li {
+        padding: 8px 0;
+        color: #666;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .plan-features i {
+        color: #4caf50;
+        font-size: 12px;
+    }
+
+    .plan-features li[style*="opacity"] i {
+        color: #dc2626;
+    }
+
+    .upgrade-button {
+        width: 100%;
+        background: #667eea;
+        color: white;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 15px;
+        font-size: 15px;
+    }
+
+    .upgrade-button:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .upgrade-button.current {
+        background: #ddd;
+        color: #666;
+        cursor: default;
+    }
+
+    .upgrade-button.current:hover {
+        background: #ddd;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .upgrade-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .upgrade-button:disabled:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    @media (max-width: 768px) {
+        .upgrade-cards {
+            grid-template-columns: 1fr;
+        }
+    }
     </style>
 </head>
 
@@ -640,7 +945,6 @@ require_once __DIR__ . '/../../helpers/subscription.php';
 
     <!-- ===== CARDS INFORMATIVOS ===== -->
     <div class="cards-section">
-        <!-- Plano Atual -->
         <div class="info-card">
             <div class="card-title">💳 Plano Atual</div>
             <div class="card-value"><?= htmlspecialchars($planData['name'] ?? 'Gratuito') ?></div>
@@ -648,47 +952,62 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                 <?= htmlspecialchars($planData['description'] ?? 'Plano padrão') ?>
             </div>
             <div class="card-badge">
-                Renova em <?= $subscriptionData['renews_at'] ?? date('d/m/Y', strtotime('+30 days')) ?>
+                Renova em <?= date('d/m/Y', strtotime($subscriptionData['renews_at'] ?? '+30 days')) ?>
             </div>
         </div>
 
-        <!-- Projetos Utilizados -->
         <div class="info-card">
             <div class="card-title">📊 Projetos</div>
             <div class="card-value"><?= $totalProjects ?>/<?= $planData['max_projects'] ?? 3 ?></div>
             <div class="card-description">
                 Você criou <strong><?= $totalProjects ?></strong> projeto(s) do limite de <strong><?= $planData['max_projects'] ?? 3 ?></strong>
             </div>
-            <div class="card-badge">
-                <?= ($totalProjects < ($planData['max_projects'] ?? 3)) ? 'Espaço disponível' : 'Limite atingido' ?>
+        </div>
+
+        <div class="info-card">
+            <div class="card-title">🌐 Domínios</div>
+            <div class="card-value"><?= $planData['max_domains'] ?? 0 ?></div>
+            <div class="card-description">
+                Domínios personalizados disponíveis
             </div>
         </div>
 
-        <!-- Templates Preminum-->
         <div class="info-card">
-            <div class="card-title">Templates Premium </div>
+            <div class="card-title">Templates Premium</div>
             <div class="card-value">
                 <?php if ($planData['can_access_premium'] === 1): ?>
-                    Todos Acessíveis
+                    ✓
                 <?php else: ?>
-                    Limitado
+                    ✗
                 <?php endif; ?>
             </div>
-            <?php if ($planData['can_access_premium'] === 1): ?>
-                <div class="card-description">
-                    Acesso a todos os templates premium
-                </div>
-            <?php else: ?>
             <div class="card-description">
-                Faça um upgrade para acessar templates exclusivos
+                <?php if ($planData['can_access_premium'] === 1): ?>
+                    Acesso liberado
+                <?php else: ?>
+                    Faça upgrade para acessar
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
         </div>
+    </div>
 
-        <!-- quantidade de dominoios e subdominios-->
-        
-
-
+    <!-- ===== ANALYTICS SECTION ===== -->
+    <div class="analytics-section">
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i> Google Analytics
+        </div>
+        <div class="form-group">
+            <label for="ga-tracking-id">ID de Rastreamento (GA4)</label>
+            <input type="text" id="ga-tracking-id" placeholder="G-XXXXXXXXXX" 
+                   value="<?= htmlspecialchars($_SESSION['ga_tracking_id'] ?? '') ?>">
+            <div class="form-help">
+                Será injetado automaticamente em todos os seus projetos publicados.
+                <a href="https://analytics.google.com/" target="_blank">Obter ID do Google Analytics</a>
+            </div>
+        </div>
+        <button class="btn-primary-modal" onclick="saveAnalytics()">
+            <i class="fas fa-save"></i> Salvar Analytics
+        </button>
     </div>
 
     <!-- ===== SEÇÃO DE PROJETOS ===== -->
@@ -702,7 +1021,8 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                 <thead>
                 <tr>
                     <th>Nome</th>
-                    <th>Template</th>
+                    <th>Status</th>
+                    <th>URL</th>
                     <th>Atualizado em</th>
                     <th>Ações</th>
                 </tr>
@@ -711,27 +1031,74 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                 <?php foreach ($projects as $project): ?>
                     <tr>
                         <td>
-                                    <span class="project-name" onclick="editProject(<?= $project['id'] ?>, <?= $project['template_id'] ?? 'null' ?>)">
-
-                                        <?= htmlspecialchars($project['name']) ?>
-                                    </span>
+                            <span class="project-name" onclick="editProject(<?= $project['id'] ?>, <?= $project['template_id'] ?? 'null' ?>)">
+                                <?= htmlspecialchars($project['name']) ?>
+                            </span>
                         </td>
                         <td>
-                            <?= htmlspecialchars($project['template_name'] ?? 'Padrão') ?>
+                            <?php if ($project['is_published']): ?>
+                                <span class="project-status status-published">
+                                    <i class="fas fa-check-circle"></i> Publicado
+                                </span>
+                            <?php else: ?>
+                                <span class="project-status status-draft">
+                                    <i class="fas fa-edit"></i> Rascunho
+                                </span>
+                            <?php endif; ?>
                         </td>
                         <td>
-                                    <span class="project-date">
-                                        <?= date('d/m/Y H:i', strtotime($project['updated_at'])) ?>
-                                    </span>
+                            <?php if ($project['published_url']): ?>
+                                <a href="<?= htmlspecialchars($project['published_url']) ?>" 
+                                   target="_blank" 
+                                   style="color: #667eea; text-decoration: none;">
+                                    <?= htmlspecialchars($project['subdomain'] ?? 'Ver site') ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <span class="project-date">
+                                <?= date('d/m/Y H:i', strtotime($project['updated_at'])) ?>
+                            </span>
                         </td>
                         <td>
                             <div class="project-actions">
                                 <a href="/editor?id=<?= $project['id'] ?>&template=<?= $project['template_id'] ?>"
                                    class="btn-action btn-edit">
-
-                                <i class="fas fa-edit"></i> Editar
+                                    <i class="fas fa-edit"></i> Editar
                                 </a>
-                                <button class="btn-action btn-delete" onclick="deleteProject(<?= $project['id'] ?>)">
+
+                                <?php if ($project['is_published']): ?>
+                                    <a href="<?= htmlspecialchars($project['published_url']) ?>" 
+                                       target="_blank" 
+                                       class="btn-action btn-view">
+                                        <i class="fas fa-external-link-alt"></i> Ver
+                                    </a>
+
+                                    <button class="btn-action btn-domains" 
+                                            onclick="showDomainsModal(<?= $project['id'] ?>, '<?= htmlspecialchars($project['name']) ?>')">
+                                        <i class="fas fa-globe"></i> Domínios
+                                    </button>
+
+                                    <button class="btn-action btn-cache" 
+                                            onclick="purgeCache(<?= $project['id'] ?>)">
+                                        <i class="fas fa-sync"></i> Cache
+                                    </button>
+
+                                    <button class="btn-action btn-unpublish" 
+                                            onclick="unpublishProject(<?= $project['id'] ?>)">
+                                        <i class="fas fa-eye-slash"></i> Despublicar
+                                    </button>
+                                <?php else: ?>
+                                    <button class="btn-action btn-publish" 
+                                            onclick="publishProject(<?= $project['id'] ?>)">
+                                        <i class="fas fa-rocket"></i> Publicar
+                                    </button>
+                                <?php endif; ?>
+
+                                <button class="btn-action btn-delete" 
+                                        onclick="deleteProject(<?= $project['id'] ?>)">
                                     <i class="fas fa-trash"></i> Deletar
                                 </button>
                             </div>
@@ -751,14 +1118,16 @@ require_once __DIR__ . '/../../helpers/subscription.php';
         <?php endif; ?>
     </div>
 
-    <!-- ===== SEÇÃO DE UPGRADE ===== -->
-    <?php if ($planData['plan_id'] !== 'Premium'): ?>
-               <div class="projects-section">
+    <?php if (($planData['name'] ?? 'Gratuito') !== 'Premium'): ?>
+        <div class="projects-section">
             <div class="section-title">
                 <i class="fas fa-rocket"></i> Faça um Upgrade
             </div>
             <div class="upgrade-cards" id="plansContainer">
-                <!-- Planos serão carregados via JavaScript -->
+                <div style="text-align: center; color: #999; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px;"></i>
+                    <p style="margin-top: 15px;">Carregando planos...</p>
+                </div>
             </div>
         </div>
     <?php endif; ?>
@@ -788,7 +1157,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
 
 <!-- ===== MODAL SELEÇÃO DE TEMPLATES ===== -->
 <div id="templateSelectorModal" class="modal">
-    <div class="modal-content modal-templates">
+    <div class="modal-content" style="max-width: 900px;">
         <div class="modal-header">
             <h5 class="modal-title">Escolha um Template</h5>
             <button type="button" class="close" onclick="closeTemplateSelector()">&times;</button>
@@ -803,229 +1172,171 @@ require_once __DIR__ . '/../../helpers/subscription.php';
     </div>
 </div>
 
-<!-- ===== STYLES ADICIONAIS ===== -->
-<style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
+<!-- ===== MODAL GERENCIAR DOMÍNIOS ===== -->
+<div id="domainsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="domainsModalTitle">Gerenciar Domínios</h5>
+            <button type="button" class="close" onclick="closeDomainsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="customDomain">Adicionar Domínio Personalizado</label>
+                <input type="text" id="customDomain" placeholder="exemplo.com.br">
+                <div class="form-help">
+                    Digite seu domínio (sem www). Você receberá instruções para configurar o DNS.
+                </div>
+            </div>
+            <button class="btn-primary-modal" onclick="addCustomDomain()">
+                <i class="fas fa-plus"></i> Adicionar Domínio
+            </button>
 
-    .modal.show {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+            <hr style="margin: 20px 0;">
 
-    .modal-content {
-        background-color: white;
-        width: 100%;
-        max-width: 500px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    }
+            <h6>Domínios Configurados</h6>
+            <ul id="domainsList" class="domain-list">
+                <li style="text-align: center; color: #999;">
+                    <i class="fas fa-spinner fa-spin"></i> Carregando...
+                </li>
+            </ul>
 
-    .close {
-        background: none;
-        border: none;
-        font-size: 28px;
-        font-weight: bold;
-        color: #999;
-        cursor: pointer;
-        padding: 0;
-    }
+            <div id="dnsInstructions" class="dns-instructions" style="display: none;">
+                <strong>📋 Instruções de Configuração DNS</strong>
+                <p>Configure o seguinte registro no painel DNS do seu domínio:</p>
+                <pre id="dnsRecord"></pre>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal btn-secondary-modal" onclick="closeDomainsModal()">Fechar</button>
+        </div>
+    </div>
+</div>
 
-    .close:hover,
-    .close:focus {
-        color: #333;
-    }
-
-
-
-/* ===== ESTILOS PARA O MODAL DE TEMPLATES ===== */
-.modal-templates .modal-content {
-    max-width: 900px;
-}
-
-.templates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-/* ===== CARD DO TEMPLATE ===== */
-.template-card {
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
-}
-
-.template-card:hover {
-    border-color: #667eea;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
-}
-
-/* Destaque especial para templates premium */
-.template-card.template-premium {
-    border-color: #8b5cf6;
-}
-
-.template-card.template-premium:hover {
-    border-color: #7c3aed;
-    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.25);
-}
-
-/* ===== BADGE PREMIUM ===== */
-.badge-premium {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-    color: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.5);
-    animation: pulse-premium 2s ease-in-out infinite;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.badge-premium svg {
-    width: 14px;
-    height: 14px;
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
-    animation: rotate-star 4s linear infinite;
-}
-
-/* Animações */
-@keyframes pulse-premium {
-    0%, 100% {
-        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.5);
-        transform: scale(1);
-    }
-    50% {
-        box-shadow: 0 6px 25px rgba(168, 85, 247, 0.8);
-        transform: scale(1.05);
-    }
-}
-
-@keyframes rotate-star {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-/* ===== THUMBNAIL DO TEMPLATE ===== */
-.template-thumb {
-    width: 100%;
-    height: 160px;
-    background: #f9fafb;
-    overflow: hidden;
-    position: relative;
-}
-
-.template-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-}
-
-.template-card:hover .template-thumb img {
-    transform: scale(1.05);
-}
-
-.template-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    color: #d1d5db;
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-}
-
-/* ===== INFO DO TEMPLATE ===== */
-.template-info {
-    padding: 15px;
-}
-
-.template-info h6 {
-    margin: 0 0 8px 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Título com cor especial para premium */
-.template-card.template-premium .template-info h6 {
-    color: #7c3aed;
-}
-
-.template-info p {
-    margin: 0;
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.5;
-}
-
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 768px) {
-    .templates-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 15px;
-    }
-    
-    .template-thumb {
-        height: 140px;
-    }
-    
-    .badge-premium {
-        font-size: 10px;
-        padding: 5px 10px;
-        top: 8px;
-        right: 8px;
-    }
-}
-
-@media (max-width: 480px) {
-    .templates-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const currentPlanName = '<?= $planData['name'] ?? 'Gratuito' ?>';
+    let currentProjectId = null;
+    let currentProjectName = null;
+    let currentDomainsProjectId = null;
 
-    // Funções do Modal
+    // ===== CARREGAR PLANOS =====
+    window.addEventListener('DOMContentLoaded', () => {
+        loadPlans();
+    });
+
+    function loadPlans() {
+        fetch('/api/projects/plans')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('plansContainer');
+                    
+                    if (!container) return; // Não está na página de upgrade
+                    
+                    container.innerHTML = '';
+
+                    if (data.plans.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #999;">Nenhum plano disponível</p>';
+                        return;
+                    }
+
+                    data.plans.forEach(plan => {
+                        const isCurrentPlan = plan.name === currentPlanName;
+                        const planHTML = `
+                        <div class="plan-card ${isCurrentPlan ? 'current' : ''}" data-display-order="${plan.display_order}">
+                            ${isCurrentPlan ? '<div class="current-badge">Plano Atual</div>' : ''}
+                            <div class="plan-name-header">${plan.name}</div>
+                            <div class="plan-price">R$ ${parseFloat(plan.price).toFixed(2)}</div>
+                            <div class="plan-price-period">por mês</div>
+                            <ul class="plan-features">
+                                <li><i class="fas fa-check"></i> ${plan.max_projects} Projetos</li>
+                                <li><i class="fas fa-check"></i> ${plan.max_storage_mb} MB de armazenamento</li>
+                                <li><i class="fas fa-check"></i> ${plan.max_downloads} downloads/mês</li>
+                                <li><i class="fas fa-check"></i> ${plan.max_domains} domínios personalizados</li>
+                                <li><i class="fas fa-check"></i> ${plan.max_subdomains} subdomínios</li>
+                                ${plan.can_access_premium ? '<li><i class="fas fa-check"></i> Templates Premium</li>' : '<li style="opacity: 0.5;"><i class="fas fa-times"></i> Templates Premium</li>'}
+                            </ul>
+                            <button class="upgrade-button ${isCurrentPlan ? 'current' : ''}"
+                                onclick="${isCurrentPlan ? 'return false;' : 'upgradePlan(' + plan.id + ')'}"
+                                ${isCurrentPlan ? 'disabled' : ''}>
+                                ${isCurrentPlan ? 'Plano Atual' : 'Fazer Upgrade'}
+                            </button>
+                        </div>
+                    `;
+                        container.innerHTML += planHTML;
+                    });
+                    
+                    disableLowerPlans();
+                } else {
+                    console.error('Erro ao carregar planos:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar planos:', error);
+            });
+    }
+
+    function upgradePlan(planId) {
+        if (!confirm('Deseja fazer upgrade para este plano?')) return;
+
+        fetch('/api/projects/upgrade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'plan_id=' + planId
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Upgrade realizado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('❌ Erro: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Erro ao processar upgrade: ' + error.message);
+            });
+    }
+
+    function disableLowerPlans() {
+        const currentPlanName = '<?= $planData['name'] ?? 'Gratuito' ?>';
+        let currentPlanOrder = null;
+        
+        document.querySelectorAll('.plan-card').forEach(card => {
+            const planName = card.querySelector('.plan-name-header')?.textContent.trim();
+            if (planName === currentPlanName) {
+                currentPlanOrder = parseInt(card.getAttribute('data-display-order')) || 0;
+            }
+        });
+
+        if (currentPlanOrder === null) {
+            return;
+        }
+
+        document.querySelectorAll('.upgrade-button').forEach(btn => {
+            const planCard = btn.closest('.plan-card');
+            const planDisplayOrder = parseInt(planCard.getAttribute('data-display-order')) || 0;
+
+            if (planDisplayOrder <= currentPlanOrder) {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+                btn.style.opacity = '0.5';
+                
+                if (planDisplayOrder === currentPlanOrder) {
+                    btn.textContent = 'Plano Atual';
+                } else {
+                    btn.textContent = 'Chame no WhatsApp';
+                    btn.onclick = () => {
+                        window.open('https://wa.me/5551999999999?text=Olá!%20Gostaria%20de%20fazer%20um%20downgrade%20de%20plano.', '_blank');
+                    };
+                }
+            }
+        });
+    }
+
+    // ===== NOVO PROJETO =====
     function showNewProjectModal() {
         document.getElementById('newProjectModal').classList.add('show');
     }
@@ -1035,10 +1346,6 @@ require_once __DIR__ . '/../../helpers/subscription.php';
         document.getElementById('projectName').value = '';
     }
 
-    let currentProjectId = null;
-    let currentProjectName = null;
-
-    // ===== FUNÇÃO CORRIGIDA =====
     function createNewProject() {
         const projectName = document.getElementById('projectName').value;
 
@@ -1049,74 +1356,67 @@ require_once __DIR__ . '/../../helpers/subscription.php';
 
         currentProjectName = projectName;
         closeNewProjectModal();
-        
-        // IR DIRETO PARA O SELETOR DE TEMPLATES (não cria o projeto ainda)
         showTemplateSelector();
     }
 
-function showTemplateSelector() {
-    // Carregar templates
-    fetch('/api/projects/templates')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const modal = document.getElementById('templateSelectorModal');
-                const container = document.getElementById('templatesGrid');
-                container.innerHTML = '';
+    // ===== TEMPLATES =====
+    function showTemplateSelector() {
+        fetch('/api/projects/templates')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = document.getElementById('templateSelectorModal');
+                    const container = document.getElementById('templatesGrid');
+                    container.innerHTML = '';
 
-                if (data.templates.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #999;">Nenhum template disponível</p>';
+                    if (data.templates.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #999;">Nenhum template disponível</p>';
+                    } else {
+                        data.templates.forEach(template => {
+                            const isPremium = template.is_premium == 1;
+                            
+                            const premiumBadge = isPremium 
+                                ? `<span class="badge-premium">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                     </svg>
+                                     Premium
+                                   </span>` 
+                                : '';
+                            
+                            const templateCard = `
+                                <div class="template-card ${isPremium ? 'template-premium' : ''}" onclick="selectTemplate(${template.id}, '${template.name}')">
+                                    ${premiumBadge}
+                                    <div class="template-thumb">
+                                        ${template.thumb_file 
+                                            ? `<img src="/templates/thumbs/${template.thumb_file}" alt="${template.name}">` 
+                                            : `<div class="template-placeholder">
+                                                 <i class="fas fa-image"></i>
+                                               </div>`
+                                        }
+                                    </div>
+                                    <div class="template-info">
+                                        <h6>${template.title || template.name}</h6>
+                                        <p>${template.description || 'Template profissional'}</p>
+                                    </div>
+                                </div>
+                            `;
+                            container.innerHTML += templateCard;
+                        });
+                    }
+
+                    modal.classList.add('show');
                 } else {
-                    data.templates.forEach(template => {
-                        const isPremium = template.is_premium == 1;
-                        
-                        // Badge Premium com ícone
-                        const premiumBadge = isPremium 
-                            ? `<span class="badge-premium">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                 </svg>
-                                 Premium
-                               </span>` 
-                            : '';
-                        
-                        const templateCard = `
-                            <div class="template-card ${isPremium ? 'template-premium' : ''}" onclick="selectTemplate(${template.id}, '${template.name}')">
-                                ${premiumBadge}
-                                <div class="template-thumb">
-                                    ${template.thumb_file 
-                                        ? `<img src="/templates/thumbs/${template.thumb_file}" alt="${template.name}">` 
-                                        : `<div class="template-placeholder">
-                                             <i class="fas fa-image"></i>
-                                           </div>`
-                                    }
-                                </div>
-                                <div class="template-info">
-                                    <h6>${template.title || template.name}</h6>
-                                    <p>${template.description || 'Template profissional'}</p>
-                                </div>
-                            </div>
-                        `;
-                        container.innerHTML += templateCard;
-                    });
+                    alert('Erro ao carregar templates: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao carregar templates');
+            });
+    }
 
-                modal.classList.add('show');
-            } else {
-                alert('Erro ao carregar templates: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao carregar templates');
-        });
-}
-
-    // ===== FUNÇÃO CORRIGIDA - AGORA CRIA O PROJETO COM O TEMPLATE =====
     function selectTemplate(templateId, templateName) {
-        console.log('Selecionando template:', templateId, templateName);
-        
-        // Criar o projeto COM o template_id E carregar o HTML
         fetch('/api/projects/save', {
             method: 'POST',
             headers: {
@@ -1127,8 +1427,6 @@ function showTemplateSelector() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Projeto criado:', data.project_id);
-                    // Ir para o editor COM o template
                     window.location.href = '/editor?id=' + data.project_id + '&template=' + templateId;
                 } else {
                     alert('Erro: ' + data.message);
@@ -1146,6 +1444,289 @@ function showTemplateSelector() {
         currentProjectName = null;
     }
 
+    // ===== PUBLICAR / DESPUBLICAR =====
+    async function publishProject(id) {
+        if (!confirm('Deseja publicar este projeto? Ele ficará disponível publicamente.')) {
+            return;
+        }
+
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+
+        try {
+            const formData = new FormData();
+            formData.append('project_id', id);
+
+            const res = await fetch('/api/deploy/publish', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message + '\n\nURL: ' + data.url);
+                location.reload();
+            } else {
+                alert('❌ ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        } catch (error) {
+            alert('Erro ao publicar: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+
+    async function unpublishProject(id) {
+        if (!confirm('Deseja despublicar este projeto? Ele não ficará mais acessível publicamente.')) {
+            return;
+        }
+
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Despublicando...';
+
+        try {
+            const formData = new FormData();
+            formData.append('project_id', id);
+
+            const res = await fetch('/api/deploy/unpublish', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+                location.reload();
+            } else {
+                alert('❌ ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        } catch (error) {
+            alert('Erro ao despublicar: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+
+    // ===== DOMÍNIOS =====
+    function showDomainsModal(projectId, projectName) {
+        currentDomainsProjectId = projectId;
+        document.getElementById('domainsModalTitle').textContent = 'Domínios - ' + projectName;
+        document.getElementById('domainsModal').classList.add('show');
+        loadDomains();
+    }
+
+    function closeDomainsModal() {
+        document.getElementById('domainsModal').classList.remove('show');
+        document.getElementById('customDomain').value = '';
+        document.getElementById('dnsInstructions').style.display = 'none';
+    }
+
+    async function loadDomains() {
+        const list = document.getElementById('domainsList');
+        list.innerHTML = '<li style="text-align: center; color: #999;"><i class="fas fa-spinner fa-spin"></i> Carregando...</li>';
+
+        try {
+            const res = await fetch(`/api/deploy/list-domains?project_id=${currentDomainsProjectId}`);
+            const data = await res.json();
+
+            if (data.success) {
+                if (data.domains.length === 0) {
+                    list.innerHTML = '<li style="text-align: center; color: #999;">Nenhum domínio configurado</li>';
+                } else {
+                    list.innerHTML = '';
+                    data.domains.forEach(domain => {
+                        const verified = domain.dns_verified == 1;
+                        const statusClass = verified ? 'verified' : 'pending';
+                        const statusText = verified ? '✓ Verificado' : '⏳ Aguardando DNS';
+
+                        const li = document.createElement('li');
+                        li.className = 'domain-item';
+                        li.innerHTML = `
+                            <div class="domain-info">
+                                <div class="domain-name">${domain.domain_name}</div>
+                                <span class="domain-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="domain-actions">
+                                ${!verified ? `<button class="btn-action btn-publish" onclick="verifyDomain(${domain.id})">
+                                    <i class="fas fa-check"></i> Verificar
+                                </button>` : ''}
+                                <button class="btn-action btn-delete" onclick="removeDomain(${domain.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                        list.appendChild(li);
+                    });
+                }
+            }
+        } catch (error) {
+            list.innerHTML = '<li style="text-align: center; color: #dc2626;">Erro ao carregar domínios</li>';
+        }
+    }
+
+    async function addCustomDomain() {
+        const domain = document.getElementById('customDomain').value.trim();
+
+        if (!domain) {
+            alert('Digite um domínio válido');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('project_id', currentDomainsProjectId);
+            formData.append('custom_domain', domain);
+
+            const res = await fetch('/api/deploy/add-domain', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                document.getElementById('customDomain').value = '';
+                
+                // Mostrar instruções DNS
+                document.getElementById('dnsInstructions').style.display = 'block';
+                document.getElementById('dnsRecord').textContent = data.instructions;
+
+                alert('✅ ' + data.message);
+                loadDomains();
+            } else {
+                alert('❌ ' + data.message);
+            }
+        } catch (error) {
+            alert('Erro ao adicionar domínio: ' + error.message);
+        }
+    }
+
+    async function removeDomain(domainId) {
+        if (!confirm('Deseja remover este domínio?')) {
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('domain_id', domainId);
+
+            const res = await fetch('/api/deploy/remove-domain', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+                loadDomains();
+            } else {
+                alert('❌ ' + data.message);
+            }
+        } catch (error) {
+            alert('Erro ao remover domínio: ' + error.message);
+        }
+    }
+
+    async function verifyDomain(domainId) {
+        try {
+            const formData = new FormData();
+            formData.append('domain_id', domainId);
+
+            const res = await fetch('/api/deploy/verify-domain', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+                loadDomains();
+            } else {
+                alert('ℹ️ ' + data.message);
+            }
+        } catch (error) {
+            alert('Erro ao verificar domínio: ' + error.message);
+        }
+    }
+
+    // ===== CACHE =====
+    async function purgeCache(projectId) {
+        if (!confirm('Deseja limpar o cache CDN deste projeto?')) {
+            return;
+        }
+
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const formData = new FormData();
+            formData.append('project_id', projectId);
+
+            const res = await fetch('/api/deploy/purge-cache', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+            } else {
+                alert('ℹ️ ' + data.message);
+            }
+        } catch (error) {
+            alert('Erro ao limpar cache: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+
+    // ===== ANALYTICS =====
+    async function saveAnalytics() {
+        const gaId = document.getElementById('ga-tracking-id').value.trim();
+
+        if (!gaId) {
+            alert('Digite um ID válido do Google Analytics');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('ga_tracking_id', gaId);
+
+            const res = await fetch('/api/deploy/save-analytics', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+            } else {
+                alert('❌ ' + data.message);
+            }
+        } catch (error) {
+            alert('Erro ao salvar: ' + error.message);
+        }
+    }
+
+    // ===== OUTROS =====
     function editProject(id, templateId) {
         if (templateId) {
             window.location.href = '/editor?id=' + id + '&template=' + templateId;
@@ -1168,102 +1749,13 @@ function showTemplateSelector() {
             });
     }
 
-    // Carregar planos
-    function loadPlans() {
-        fetch('/api/projects/plans')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const container = document.getElementById('plansContainer');
-                    container.innerHTML = '';
-
-                    data.plans.forEach(plan => {
-                        const isCurrentPlan = plan.name === currentPlanName;
-                        const planHTML = `
-                        <div class="plan-card ${isCurrentPlan ? 'current' : ''}" data-display-order="${plan.display_order}">
-                            ${isCurrentPlan ? '<div class="current-badge">Plano Atual</div>' : ''}
-                            <div class="plan-name-header">${plan.name}</div>
-                            <div class="plan-price">R$ ${parseFloat(plan.price).toFixed(2)}</div>
-                            <div class="plan-price-period">por mês</div>
-                            <ul class="plan-features">
-                                <li><i class="fas fa-check"></i> ${plan.max_projects} Projetos</li>
-                                <li><i class="fas fa-check"></i> ${plan.can_access_premium ? 'Acesso a Templates Premium' : 'Sem Acesso a Templates Premium'}</li>
-                                <li><i class="fas fa-check"></i> ${plan.max_domains} Domínios próprios</li>
-                            </ul>
-                            <button class="upgrade-button ${isCurrentPlan ? 'current' : ''}"
-                                onclick="${isCurrentPlan ? 'return false;' : 'upgradePlan(' + plan.id + ')'}"
-                                ${isCurrentPlan ? 'disabled' : ''}>
-                                ${isCurrentPlan ? 'Plano Atual' : 'Fazer Upgrade'}
-                            </button>
-                        </div>
-                    `;
-                        container.innerHTML += planHTML;
-                    });
-                    disableLowerPlans();
-                }
-            });
-    }
-
-    function upgradePlan(planId) {
-        if (!confirm('Deseja fazer upgrade para este plano?')) return;
-
-        fetch('/api/projects/upgrade', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'plan_id=' + planId
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Upgrade realizado com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            });
-    }
-
-    window.addEventListener('load', loadPlans);
-
     window.onclick = function(event) {
         const modal = document.getElementById('newProjectModal');
         if (event.target == modal) {
             modal.classList.remove('show');
         }
     }
-
-    function disableLowerPlans() {
-        const currentPlanName = '<?= $planData['name'] ?? 'Gratuito' ?>';
-        let currentPlanOrder = null;
-        
-        document.querySelectorAll('.plan-card').forEach(card => {
-            const planName = card.querySelector('.plan-name-header')?.textContent.trim();
-            if (planName === currentPlanName) {
-                currentPlanOrder = parseInt(card.getAttribute('data-display-order')) || 0;
-            }
-        });
-
-        if (currentPlanOrder === null) {
-            console.warn('Plano atual não encontrado:', currentPlanName);
-            return;
-        }
-
-        document.querySelectorAll('.upgrade-button').forEach(btn => {
-            const planCard = btn.closest('.plan-card');
-            const planDisplayOrder = parseInt(planCard.getAttribute('data-display-order')) || 0;
-
-            if (planDisplayOrder <= currentPlanOrder) {
-                btn.disabled = true;
-                btn.style.cursor = 'not-allowed';
-                btn.style.opacity = '0.5';
-                btn.textContent = planDisplayOrder === currentPlanOrder ? 'Plano Atual' : 'Chame no whatsapp';
-            }
-        });
-    }
 </script>
 
 </body>
-
 </html>

@@ -200,6 +200,8 @@ public function save()
                 p.id,
                 p.name,
                 p.template_id,
+                p.is_published,
+                p.published_url,
                 t.name as template_name,
                 p.created_at,
                 p.updated_at

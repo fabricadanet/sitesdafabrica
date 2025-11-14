@@ -7,6 +7,7 @@ use App\Controllers\AuthController;
 use App\Controllers\EditorController;
 use App\Controllers\ProjectController;
 use App\Controllers\AdminController;
+use App\Controllers\DeployController;
 
 // Pega o path da URL (sem query string)
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -117,7 +118,23 @@ switch ($cleanUri) {
             echo json_encode(['success' => false, 'message' => 'Método inválido']);
         }
         break;
-
+ 
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            require_once __DIR__ . '/../app/helpers/whm_deploy.php';
+            
+            $userId = $_SESSION['user_id'];
+            $projectId = $_POST['project_id'] ?? null;
+            
+            if (!$projectId) {
+                echo json_encode(['success' => false, 'message' => 'ID do projeto não informado']);
+                exit;
+            }
+            
+            $result = deployProject($pdo, $projectId, $userId);
+            echo json_encode($result);
+        }
+        break; 
     // ⚙️ ADMIN DASHBOARD
     case '/admin':
         if (!$isApi) {
@@ -269,7 +286,60 @@ switch ($cleanUri) {
             (new AdminController)->subscriptionCancel();
         }
         break;
+    // ROTAS DE DEPLOY 
+    case '/api/deploy/publish':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->publish();
+        }
+        break;
+    case '/api/deploy/unpublish':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->unpublish();
+        }
+        break;
 
+    case '/api/deploy/add-domain':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->addDomain();
+        }
+        break;
+
+    case '/api/deploy/remove-domain':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->removeDomain();
+        }
+        break;
+
+    case '/api/deploy/verify-domain':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->verifyDomain();
+        }
+        break;
+
+    case '/api/deploy/list-domains':
+        header('Content-Type: application/json');
+        (new DeployController)->listDomains();
+        break;
+
+    case '/api/deploy/purge-cache':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->purgeCache();
+        }
+        break;
+
+    case '/api/deploy/save-analytics':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->saveAnalytics();
+        }
+        break;
+    
     default:
         http_response_code(404);
         header('Content-Type: application/json');
