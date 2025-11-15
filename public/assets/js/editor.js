@@ -21,8 +21,8 @@ async function loadTemplate(name) {
     try {
       const res = await fetch(`/projects/get?id=${PROJECT_ID}`);
       const json = await res.json();
-      if (json.success && json.data && json.data.content_html) {
-        renderTemplate(json.data.content_html);
+      if (json.success && json.data && json.data.html_content) {
+        renderTemplate(json.data.html_content);
         applyGlobalVars(json.data.global_vars);
         return;
       }

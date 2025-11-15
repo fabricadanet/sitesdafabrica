@@ -1,12 +1,13 @@
 <?php
 // config/routes.php
-// Router principal — com todos os endpoints
+// Router principal – com todos os endpoints
 // ✅ CORRIGIDO: Adicionado suporte a /api/ routes
 
 use App\Controllers\AuthController;
 use App\Controllers\EditorController;
 use App\Controllers\ProjectController;
 use App\Controllers\AdminController;
+use App\Controllers\DeployController;
 
 // Pega o path da URL (sem query string)
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -241,7 +242,7 @@ switch ($cleanUri) {
         }
         break;
 
-    // 🔄 ASSINATURAS ADMIN
+    // 📄 ASSINATURAS ADMIN
     case '/admin/subscriptions':
         if (!$isApi) {
             (new AdminController)->subscriptions();
@@ -270,6 +271,82 @@ switch ($cleanUri) {
         }
         break;
 
+    // 🚀 ROTAS DE DEPLOY 
+    case '/deploy/publish':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->publish();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+
+    case '/deploy/unpublish':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->unpublish();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+
+    case '/deploy/add-domain':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->addDomain();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+
+    case '/deploy/remove-domain':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->removeDomain();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+
+    case '/deploy/verify-domain':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->verifyDomain();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+
+    case '/deploy/list-domains':
+        header('Content-Type: application/json');
+        (new DeployController)->listDomains();
+        break;
+
+    case '/deploy/purge-cache':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->purgeCache();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+
+    case '/deploy/save-analytics':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new DeployController)->saveAnalytics();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+        }
+        break;
+    
     default:
         http_response_code(404);
         header('Content-Type: application/json');

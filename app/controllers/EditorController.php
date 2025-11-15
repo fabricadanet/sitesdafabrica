@@ -11,43 +11,75 @@ class EditorController {
     }
 
     public function index() {
-     
-        $user_id = $_SESSION['user_id'] ;
-        $canAccess = userCanAccessPremium( $this->pdo, $user_id);
+        $user_id = $_SESSION['user_id'];
+        $canAccess = userCanAccessPremium($this->pdo, $user_id);
 
-        $templateId = intval($_GET['template']);
-
-        $template = $this->pdo
-            ->prepare("SELECT * FROM templates_library WHERE id = :id LIMIT 1");
-        $template->execute(['id' => $templateId]);
-
-        $template = $template->fetch(PDO::FETCH_ASSOC);
-
-
-        if ($template['is_premium'] == 1 && !$canAccess) {
-            die("⚠ Você precisa de um plano Premium para usar este template.");
-        }
-
-        $id = $_GET['id'] ?? null;
-        $template = $_GET['template'] ?? null;
+        $projectId = $_GET['id'] ?? null;
+        $templateId = $_GET['template'] ?? null;
         $project = null;
+        $templateHtml = null;
+        $projectName = "Novo Projeto";
 
-        if ($id) {
-            $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?");
-            $stmt->execute([$id, $user_id]);
-            $project = $stmt->fetch(\PDO::FETCH_ASSOC);
+        // ===== CASO 1: Editando projeto existente =====
+        if ($projectId) {
+            $stmt = $this->pdo->prepare("
+                SELECT p.*, t.html_file, t.name AS template_name
+                FROM projects p
+                LEFT JOIN templates_library t ON p.template_id = t.id
+                WHERE p.id = ? AND p.user_id = ?
+            ");
+            $stmt->execute([$projectId, $user_id]);
+            $project = $stmt->fetch(PDO::FETCH_ASSOC);
+
             if (!$project) {
                 echo "<script>alert('Projeto não encontrado.');window.location='/projects';</script>";
-                return;
+                exit;
+            }
+
+            $projectName = $project['name'];
+            $templateId = $project['template_id'] ?? $templateId;
+
+            // Prioridade: HTML salvo > HTML do template
+            if (!empty($project['html_content'])) {
+                $templateHtml = $project['html_content'];
+            } elseif (!empty($project['html_file'])) {
+                $file = $_SERVER['DOCUMENT_ROOT'] . "/templates/{$project['html_file']}";
+                if (file_exists($file)) {
+                    $templateHtml = file_get_contents($file);
+                }
             }
         }
 
-        // se não há HTML salvo, carrega o template padrão
-        if ($project && empty($project['content_html']) && $template) {
-            $tplPath = __DIR__ . "/../../templates/{$template}.html";
-            if (file_exists($tplPath)) {
-                $project['content_html'] = file_get_contents($tplPath);
+        // ===== CASO 2: Novo projeto com template =====
+        if (!$templateHtml && $templateId) {
+            $stmt = $this->pdo->prepare("
+                SELECT id, html_file, name, is_premium
+                FROM templates_library
+                WHERE id = ? AND status = 'active'
+            ");
+            $stmt->execute([$templateId]);
+            $template = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($template) {
+                // Verificar se é premium e se o usuário tem acesso
+                if ($template['is_premium'] == 1 && !$canAccess) {
+                    die("⚠ Você precisa de um plano Premium para usar este template.");
+                }
+
+                if (empty($projectName) || $projectName === "Novo Projeto") {
+                    $projectName = $template['name'];
+                }
+
+                $file = __DIR__ . "/../../public/templates/{$template['html_file']}";
+                if (file_exists($file)) {
+                    $templateHtml = file_get_contents($file);
+                }
             }
+        }
+
+        // ===== Fallback: Template vazio =====
+        if (!$templateHtml) {
+            $templateHtml = "<h1>Template vazio</h1><p>Selecione um template para começar.</p>";
         }
 
         include __DIR__ . '/../Views/editor/editor.php';

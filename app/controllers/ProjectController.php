@@ -29,80 +29,95 @@ class ProjectController
      * - Salva HTML content do projeto
      * - Mantém o template_id para recarregar depois
      */
-    public function save()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false]);
-            return;
-        }
-
-        $userId = $_SESSION['user_id'];
-        $id = $_POST['id'] ?? null;
-        $name = trim($_POST['name'] ?? 'Sem Título');
-        $html = $_POST['html'] ?? '';
-        $templateId = $_POST['template_id'] ?? null;
-        $globalVars = $_POST['global_vars'] ?? null;
-
-        if (!$name) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
-            return;
-        }
-
-        try {
-            if ($id) {
-                // UPDATE: projeto já existe
-                $stmt = $this->pdo->prepare("SELECT user_id FROM projects WHERE id = ?");
-                $stmt->execute([$id]);
-                $project = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-                if (!$project || $project['user_id'] != $userId) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Projeto não encontrado']);
-                    return;
-                }
-
-                // Preparar atualização
-                $fields = ['name = ?', 'updated_at = CURRENT_TIMESTAMP'];
-                $values = [$name];
-
-                // Apenas atualizar HTML se fornecido
-                if ($html !== '') {
-                    $fields[] = 'html_content = ?';
-                    $values[] = $html;
-                }
-
-                // Apenas atualizar template_id se fornecido
-                if ($templateId !== null && $templateId !== '') {
-                    $fields[] = 'template_id = ?';
-                    $values[] = $templateId;
-                }
-
-                $values[] = $id;
-                $sql = "UPDATE projects SET " . implode(', ', $fields) . " WHERE id = ?";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute($values);
-
-            } else {
-                // INSERT: novo projeto
-                $stmt = $this->pdo->prepare("
-                    INSERT INTO projects (user_id, name, html_content, template_id)
-                    VALUES (?, ?, ?, ?)
-                ");
-                $stmt->execute([$userId, $name, $html, $templateId]);
-                $id = $this->pdo->lastInsertId();
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'project_id' => $id, 'message' => 'Projeto salvo com sucesso']);
-
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
+public function save()
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false]);
+        return;
     }
 
+    $userId = $_SESSION['user_id'];
+    $id = $_POST['id'] ?? null;
+    $name = trim($_POST['name'] ?? 'Sem Título');
+    $html = $_POST['html'] ?? '';
+    $templateId = $_POST['template_id'] ?? null;
+    $loadTemplateContent = $_POST['load_template_content'] ?? false;
+
+    if (!$name) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
+        return;
+    }
+
+    try {
+        if ($id) {
+            // UPDATE
+            $stmt = $this->pdo->prepare("SELECT user_id FROM projects WHERE id = ?");
+            $stmt->execute([$id]);
+            $project = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$project || $project['user_id'] != $userId) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Projeto não encontrado']);
+                return;
+            }
+
+            $fields = ['name = ?', 'updated_at = CURRENT_TIMESTAMP'];
+            $values = [$name];
+
+            if ($html !== '') {
+                $fields[] = 'html_content = ?';
+                $values[] = $html;
+            }
+
+            if ($templateId !== null && $templateId !== '') {
+                $fields[] = 'template_id = ?';
+                $values[] = $templateId;
+            }
+
+            $values[] = $id;
+            $sql = "UPDATE projects SET " . implode(', ', $fields) . " WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($values);
+
+        } else {
+            // INSERT NOVO PROJETO
+            
+            // ===== CARREGAR HTML DO TEMPLATE =====
+            if ($loadTemplateContent && $templateId && empty($html)) {
+                $stmt = $this->pdo->prepare("
+                    SELECT html_file 
+                    FROM templates_library 
+                    WHERE id = ? AND status = 'active'
+                ");
+                $stmt->execute([$templateId]);
+                $template = $stmt->fetch(\PDO::FETCH_ASSOC);
+                
+                if ($template && !empty($template['html_file'])) {
+                    $templatePath = __DIR__ . '/../../public/templates/' . $template['html_file'];
+                    if (file_exists($templatePath)) {
+                        $html = file_get_contents($templatePath);
+                    }
+                }
+            }
+            
+            $stmt = $this->pdo->prepare("
+                INSERT INTO projects (user_id, name, html_content, template_id)
+                VALUES (?, ?, ?, ?)
+            ");
+            $stmt->execute([$userId, $name, $html, $templateId]);
+            $id = $this->pdo->lastInsertId();
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'project_id' => $id, 'message' => 'Projeto salvo com sucesso']);
+
+    } catch (\Exception $e) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
     /**
      * NOVO MÉTODO: getTemplates
      * Retorna todos os templates disponíveis para o seletor
@@ -185,6 +200,8 @@ class ProjectController
                 p.id,
                 p.name,
                 p.template_id,
+                p.is_published,
+                p.published_url,
                 t.name as template_name,
                 p.created_at,
                 p.updated_at
@@ -205,37 +222,36 @@ class ProjectController
      * Buscar projeto individual
      */
     public function get()
-    {
-        $userId = $_SESSION['user_id'];
-        $id = $_GET['id'] ?? null;
+{
+    $userId = $_SESSION['user_id'];
+    $id = $_GET['id'] ?? null;
 
-        if (!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID ausente']);
+    if (!$id) {
+        echo json_encode(['success' => false, 'message' => 'ID ausente']);
+        return;
+    }
+
+    try {
+        $stmt = $this->pdo->prepare("
+            SELECT id, name, html_content, template_id
+            FROM projects
+            WHERE id = ? AND user_id = ?
+        ");
+        $stmt->execute([$id, $userId]);
+        $project = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$project) {
+            echo json_encode(['success' => false, 'message' => 'Projeto não encontrado']);
             return;
         }
 
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT id, name, html_content, template_id
-                FROM projects
-                WHERE id = ? AND user_id = ?
-            ");
-            $stmt->execute([$id, $userId]);
-            $project = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-            if (!$project) {
-                echo json_encode(['success' => false, 'message' => 'Projeto não encontrado']);
-                return;
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'data' => $project]);
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $project]);
+    } catch (\Exception $e) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-
+}
     /**
      * MÉTODO EXISTENTE: delete
      */

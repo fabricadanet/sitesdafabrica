@@ -1,0 +1,209 @@
+<html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Institucional</title>
+
+    <!-- ===================================================== -->
+    <!--                🔵 ÁREA DE TAGS — HEAD                -->
+    <!-- ===================================================== -->
+
+    </head><body><div data-edit="tag-google-head"></div>
+    <div data-edit="tag-meta-head"></div>
+    <div data-edit="tag-tiktok-head"></div>
+    <div data-edit="tag-hotjar-head"></div>
+    <div data-edit="tag-other-head"></div>
+
+    <!-- ===================================================== -->
+    <!--                         CSS                           -->
+    <!-- ===================================================== -->
+    <style>
+        :root {
+            --cor-principal: #1e40af;
+            --cor-secundaria: #0ea5e9;
+            --fonte-base: 'Segoe UI', Roboto, sans-serif;
+            --fundo-claro: #f9fafb;
+            --sombra-card: 0 4px 10px rgba(0,0,0,0.05);
+            --border-radius: 8px;
+            --padding-secao: 60px;
+            --opacity-hover: 1;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: var(--fonte-base);
+            line-height: 1.6;
+            color: #111827;
+            background: var(--fundo-claro);
+        }
+
+        header {
+            background: var(--cor-principal);
+            color: white;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            margin-left: 20px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .hero {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 5%;
+            background: white;
+        }
+
+        .hero-text { flex: 1; min-width: 300px; }
+
+        .hero img {
+            max-width: 480px;
+            border-radius: 10px;
+            flex: 1;
+        }
+
+        .btn-whatsapp {
+            display: inline-block;
+            background: var(--cor-secundaria);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+
+        .sobre, .produtos, .equipe, .contato {
+            padding: 60px 5%;
+        }
+
+        .grid-produtos, .grid-equipe {
+            display: grid;
+            gap: 24px;
+        }
+
+        .produto img, .membro img {
+            width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+
+
+
+<!-- ===================================================== -->
+<!--                🟢 ÁREA DE TAGS — BODY                -->
+<!-- ===================================================== -->
+
+<div data-edit="tag-google-body"></div>
+<div data-edit="tag-meta-body"></div>
+<div data-edit="tag-tiktok-body"></div>
+<div data-edit="tag-hotjar-body"></div>
+<div data-edit="tag-other-body"></div>
+
+<header>
+    <img src="https://via.placeholder.com/180x60.png?text=LOGO" alt="Logo da empresa" data-edit="logo-header (180px x 60px)">
+    <nav>
+        <a href="#sobre">Sobre</a>
+        <a href="#produtos">Produtos</a>
+        <a href="#equipe">Equipe</a>
+        <a href="#contato">Contato</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-text">
+        <h1 data-edit="titulo-principal">Bem-vindo à Nossa Empresa</h1>
+        <p data-edit="texto-principal">
+            Soluções completas em tecnologia e inovação para o seu negócio prosperar.
+        </p>
+        <a href="#" class="btn-whatsapp" data-edit="link-whatsapp">💬 Fale Conosco</a>
+    </div>
+
+    <img src="https://via.placeholder.com/480x320.png?text=Hero" alt="Imagem principal" data-edit="imagem-hero (480px x 320px)">
+</section>
+
+<section id="sobre" class="sobre">
+    <h2 data-edit="titulo-sobre">Sobre Nós</h2>
+    <p data-edit="texto-sobre">
+        Somos uma equipe apaixonada por tecnologia, dedicada a criar experiências digitais inovadoras.
+    </p>
+</section>
+
+<section id="produtos" class="produtos">
+    <h2 data-edit="titulo-produtos">Nossos Produtos</h2>
+
+    <div class="grid-produtos">
+
+        <div class="produto">
+            <img src="https://via.placeholder.com/240x240.png?text=Produto+1" alt="Produto 1" data-edit="imagem-produto-1 (240px x 240px)">
+            <h3 data-edit="nome-produto-1">Produto 1</h3>
+            <p data-edit="descricao-produto-1">Descrição do produto 1.</p>
+        </div>
+
+        <div class="produto">
+            <img src="https://via.placeholder.com/240x240.png?text=Produto+2" alt="Produto 2" data-edit="imagem-produto-2 (240px x 240px)">
+            <h3 data-edit="nome-produto-2">Produto 2</h3>
+            <p data-edit="descricao-produto-2">Descrição do produto 2.</p>
+        </div>
+
+        <div class="produto">
+            <img src="https://via.placeholder.com/240x240.png?text=Produto+3" alt="Produto 3" data-edit="imagem-produto-3 (240px x 240px)">
+            <h3 data-edit="nome-produto-3">Produto 3</h3>
+            <p data-edit="descricao-produto-3">Descrição do produto 3.</p>
+        </div>
+
+    </div>
+</section>
+
+<section id="equipe" class="equipe">
+    <h2 data-edit="titulo-equipe">Nossa Equipe</h2>
+
+    <div class="grid-equipe">
+
+        <div class="membro">
+            <img src="https://via.placeholder.com/220x220.png?text=Membro+1" alt="Membro da equipe" data-edit="foto-membro-1 (220px x 220px)">
+            <h4 data-edit="nome-membro-1">João Silva</h4>
+            <p data-edit="cargo-membro-1">CEO &amp; Fundador</p>
+        </div>
+
+        <div class="membro">
+            <img src="https://via.placeholder.com/220x220.png?text=Membro+2" alt="Membro da equipe" data-edit="foto-membro-2 (220px x 220px)">
+            <h4 data-edit="nome-membro-2">Maria Souza</h4>
+            <p data-edit="cargo-membro-2">Diretora de Criação</p>
+        </div>
+
+        <div class="membro">
+            <img src="https://via.placeholder.com/220x220.png?text=Membro+3" alt="Membro da equipe" data-edit="foto-membro-3 (220px x 220px)">
+            <h4 data-edit="nome-membro-3">Carlos Pereira</h4>
+            <p data-edit="cargo-membro-3">Líder de Desenvolvimento</p>
+        </div>
+
+    </div>
+</section>
+
+<section id="contato" class="contato">
+    <h2 data-edit="titulo-contato">Entre em Contato</h2>
+    <form>
+        <input type="text" placeholder="Seu nome" data-edit="form-nome">
+        <input type="email" placeholder="Seu e-mail" data-edit="form-email">
+        <textarea placeholder="Sua mensagem" rows="4" data-edit="form-mensagem"></textarea>
+        <button type="submit" data-edit="form-botao">Enviar Mensagem</button>
+    </form>
+</section>
+
+<footer>
+    <small data-edit="rodape">© 2025 — Todos os direitos reservados.</small>
+</footer>
+
+
+
+
+
+</body></html>
