@@ -82,7 +82,7 @@ else {
     <link rel="stylesheet" href="/assets/css/editor-feedback.css">
     <script src="/assets/js/editor-feedback.js" defer></script>
 
-    <link rel="stylesheet" href="/assets/css/editor.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/assets/css/editor.css">
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
@@ -412,14 +412,11 @@ else {
             </h5>
             <div id="categories-container"></div>
         </aside>
-        </aside>
     </main>
 
-    <div id="loading-overlay" class="hidden">
-        <div class="spinner-container">
-            <img src="/assets/img/spinner-logo.png" alt="Loading..." class="spinner-logo">
-            <div class="spinner-text" id="loading-text">Processando...</div>
-        </div>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: #374151; font-weight: 500;">Carregando...</p>
     </div>
 
     <script>
@@ -524,13 +521,28 @@ else {
     }
 
     function buildSidebar() {
+        console.log('🧱 Iniciando construção do painel lateral...');
+
         const container = document.getElementById('categories-container');
+        if (!container) {
+            console.error('❌ Container categories-container não encontrado!');
+            return;
+        }
+
         container.innerHTML = '';
 
         const categories = {};
 
         // Agrupa elementos com data-edit
         const allElements = iframeDoc.querySelectorAll('[data-edit]');
+        console.log(`📝 Total de elementos [data-edit]: ${allElements.length}`);
+
+        if (allElements.length === 0) {
+            container.innerHTML =
+                '<p style="padding: 20px; text-align: center; color: #999;">⚠️ Nenhum elemento editável encontrado no template</p>';
+            return;
+        }
+
         allElements.forEach(el => {
             const key = el.dataset.edit;
             const category = categorizeField(key, el);
@@ -545,6 +557,8 @@ else {
             });
         });
 
+        console.log(`📂 Categorias criadas:`, Object.keys(categories));
+
         // Extrai variáveis CSS
         extractCSSVariables(categories);
 
@@ -555,15 +569,17 @@ else {
             };
             const fields = categories[categoryKey];
 
+            console.log(`  ├─ ${config.name}: ${fields.length} campos`);
+
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'category';
             categoryDiv.innerHTML = `
-                <div class="category-header" onclick="toggleCategory(this)">
-                    <h6>${config.name} [${fields.length}]</h6>
-                    <div class="collapse-toggle">▼</div>
-                </div>
-                <div class="category-content"></div>
-            `;
+            <div class="category-header" onclick="toggleCategory(this)">
+                <h6>${config.name} [${fields.length}]</h6>
+                <div class="collapse-toggle">▼</div>
+            </div>
+            <div class="category-content"></div>
+        `;
 
             const contentDiv = categoryDiv.querySelector('.category-content');
 
@@ -581,6 +597,8 @@ else {
 
             container.appendChild(categoryDiv);
         });
+
+        console.log('✅ Painel lateral construído com sucesso');
     }
 
     function createFieldInput(key, element, preferredType, isCSSVar, varName, cssValue) {
@@ -1028,24 +1046,14 @@ else {
         setTimeout(() => tryBuildSidebar(attempt + 1), 150);
     }
 
-
-
-    function showLoading(text) {
-        const overlay = document.getElementById('loading-overlay');
-        const textEl = document.getElementById('loading-text');
-        if (text) textEl.textContent = text;
-        overlay.classList.remove('hidden');
-        // Force reflow
-        void overlay.offsetWidth;
-        overlay.classList.add('visible');
+    function showLoading(msg = 'Carregando...') {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.querySelector('p').textContent = msg;
+        overlay.style.display = 'flex';
     }
 
     function hideLoading() {
-        const overlay = document.getElementById('loading-overlay');
-        overlay.classList.remove('visible');
-        setTimeout(() => {
-            overlay.classList.add('hidden');
-        }, 300);
+        document.getElementById('loadingOverlay').style.display = 'none';
     }
 
     function getCleanHTML() {
@@ -1067,17 +1075,17 @@ else {
 
     document.getElementById('saveProject').onclick = async () => {
         showLoading('Salvando projeto...');
+        const html = getCleanHTML();
+        const form = new FormData();
+        form.append('id', PROJECT_ID || '');
+        form.append('name', PROJECT_NAME);
+        form.append('html', html);
+
+        if (TEMPLATE_ID) {
+            form.append('template_id', TEMPLATE_ID);
+        }
+
         try {
-            const html = getCleanHTML();
-            const form = new FormData();
-            form.append('id', PROJECT_ID || '');
-            form.append('name', PROJECT_NAME);
-            form.append('html', html);
-
-            if (TEMPLATE_ID) {
-                form.append('template_id', TEMPLATE_ID);
-            }
-
             const res = await fetch('/projects/save', {
                 method: 'POST',
                 body: form
@@ -1085,18 +1093,17 @@ else {
             const data = await res.json();
 
             if (data.success) {
-                hideLoading();
+                alert('Projeto salvo!');
                 if (!PROJECT_ID && data.project_id) {
                     window.location.href = '/editor?id=' + data.project_id;
                 }
             } else {
-                hideLoading();
                 alert('Erro ao salvar o projeto');
             }
         } catch (e) {
-            hideLoading();
             alert('Erro de conexão ao salvar');
-            console.error(e);
+        } finally {
+            hideLoading();
         }
     };
 
@@ -1121,11 +1128,10 @@ else {
                 type: 'blob'
             });
             saveAs(blob, PROJECT_NAME + '.zip');
-            hideLoading();
         } catch (e) {
+            alert('Erro ao gerar download');
+        } finally {
             hideLoading();
-            alert('Erro ao gerar download.');
-            console.error(e);
         }
     };
 
