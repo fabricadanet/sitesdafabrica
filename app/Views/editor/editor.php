@@ -1046,147 +1046,90 @@ else {
         setTimeout(() => {
             overlay.classList.add('hidden');
         }, 300);
+    }
 
-        function showLoading(msg = 'Carregando...') {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.querySelector('p').textContent = msg;
-            overlay.style.display = 'flex';
+    function getCleanHTML() {
+        // Clone the document to avoid modifying the live editor
+        const clone = iframeDoc.documentElement.cloneNode(true);
+
+        // Remove editor artifacts from the clone
+        const toolbar = clone.querySelector('#sf-editor-toolbar');
+        if (toolbar) toolbar.remove();
+
+        const editables = clone.querySelectorAll('[contenteditable]');
+        editables.forEach(el => el.removeAttribute('contenteditable'));
+
+        const editorStyle = clone.querySelector('#sf-editor-style');
+        if (editorStyle) editorStyle.remove();
+
+        return clone.outerHTML;
+    }
+
+    document.getElementById('saveProject').onclick = async () => {
+        showLoading('Salvando projeto...');
+        try {
+            const html = getCleanHTML();
+            const form = new FormData();
+            form.append('id', PROJECT_ID || '');
+            form.append('name', PROJECT_NAME);
+            form.append('html', html);
+
+            if (TEMPLATE_ID) {
+                form.append('template_id', TEMPLATE_ID);
+            }
+
+            const res = await fetch('/projects/save', {
+                method: 'POST',
+                body: form
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                hideLoading();
+                if (!PROJECT_ID && data.project_id) {
+                    window.location.href = '/editor?id=' + data.project_id;
+                }
+            } else {
+                hideLoading();
+                alert('Erro ao salvar o projeto');
+            }
+        } catch (e) {
+            hideLoading();
+            alert('Erro de conexão ao salvar');
+            console.error(e);
         }
+    };
 
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('preview').onclick = () => {
+        showLoading('Gerando preview...');
+        setTimeout(() => {
+            const blob = new Blob([getCleanHTML()], {
+                type: 'text/html'
+            });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            hideLoading();
+        }, 500);
+    };
+
+    document.getElementById('downloadSite').onclick = async () => {
+        showLoading('Gerando arquivo ZIP...');
+        try {
+            const zip = new JSZip();
+            zip.file('index.html', getCleanHTML());
+            const blob = await zip.generateAsync({
+                type: 'blob'
+            });
+            saveAs(blob, PROJECT_NAME + '.zip');
+            hideLoading();
+        } catch (e) {
+            hideLoading();
+            alert('Erro ao gerar download.');
+            console.error(e);
         }
+    };
 
-        function getCleanHTML() {
-            // Clone the document to avoid modifying the live editor
-            const clone = iframeDoc.documentElement.cloneNode(true);
-
-            // Remove editor artifacts from the clone
-            const toolbar = clone.querySelector('#sf-editor-toolbar');
-            if (toolbar) toolbar.remove();
-
-            const editables = clone.querySelectorAll('[contenteditable]');
-            editables.forEach(el => el.removeAttribute('contenteditable'));
-
-            const editorStyle = clone.querySelector('#sf-editor-style');
-            if (editorStyle) editorStyle.remove();
-
-            return clone.outerHTML;
-        }
-
-        document.getElementById('saveProject').onclick = async () => {
-                    showLoading('Salvando projeto...');
-                    try {
-                        const html = iframeDoc.documentElement.outerHTML;
-                        const form = new FormData();
-                        form.append('id', PROJECT_ID || '');
-                        form.append('name', PROJECT_NAME);
-                        form.append('html', html);
-
-                        if (TEMPLATE_ID) {
-                            form.append('template_id', TEMPLATE_ID);
-                        }
-
-                        const res = await fetch('/projects/save', {
-                            method: 'POST',
-                            body: form
-                        });
-                        const data = await res.json();
-
-                        if (data.success) {
-                            // Short delay to show success state
-                            setTimeout(() => {
-                                hideLoading();
-                                // alert('Projeto salvo!'); // Removed for better UX
-                                if (!PROJECT_ID && data.project_id) {
-                                    window.location.href = '/editor?id=' + data.project_id;
-                                }
-                            }, 2500); // Increased to 2.5s for visibility
-                        } else {
-                            hideLoading();
-                            console.error('Erro ao salvar o projeto');
-                        }
-                    } catch (e) {
-                        hideLoading();
-                        console.error('Erro de conexão ao salvar.', e);
-                        const html = getCleanHTML();
-                        const form = new FormData();
-                        form.append('id', PROJECT_ID || '');
-                        form.append('name', PROJECT_NAME);
-                        form.append('html', html);
-
-                        if (TEMPLATE_ID) {
-                            form.append('template_id', TEMPLATE_ID);
-                        }
-
-                        try {
-                            const res = await fetch('/projects/save', {
-                                method: 'POST',
-                                body: form
-                            });
-                            const data = await res.json();
-
-                            if (data.success) {
-                                alert('Projeto salvo!');
-                                if (!PROJECT_ID && data.project_id) {
-                                    window.location.href = '/editor?id=' + data.project_id;
-                                }
-                            } else {
-                                alert('Erro ao salvar o projeto');
-                            }
-                        } catch (e) {
-                            alert('Erro de conexão ao salvar');
-                        } finally {
-                            hideLoading();
-                        }
-                    };
-
-                    document.getElementById('preview').onclick = () => {
-
-                        showLoading('Abrindo preview...');
-                        setTimeout(() => {
-                            const blob = new Blob([iframeDoc.documentElement.outerHTML], {
-                                type: 'text/html'
-                            });
-                            const url = URL.createObjectURL(blob);
-                            window.open(url, '_blank');
-                            hideLoading();
-                        }, 2000); // Increased to 2s
-
-                        showLoading('Gerando preview...');
-                        setTimeout(() => {
-                            const blob = new Blob([getCleanHTML()], {
-                                type: 'text/html'
-                            });
-                            const url = URL.createObjectURL(blob);
-                            window.open(url, '_blank');
-                            hideLoading();
-                        }, 500);
-                    };
-
-                    document.getElementById('downloadSite').onclick = async () => {
-                        showLoading('Gerando arquivo ZIP...');
-                        try {
-                            const zip = new JSZip();
-                            zip.file('index.html', iframeDoc.documentElement.outerHTML);
-                            const blob = await zip.generateAsync({
-                                type: 'blob'
-                            });
-                            saveAs(blob, PROJECT_NAME + '.zip');
-                            hideLoading();
-                        } catch (e) {
-                            hideLoading();
-                            alert('Erro ao gerar download.');
-                            console.error(e);
-                            zip.file('index.html', getCleanHTML());
-                            const blob = await zip.generateAsync({
-                                type: 'blob'
-                            });
-                            saveAs(blob, PROJECT_NAME + '.zip');
-                        }
-                    };
-
-                    window.toggleCategory = toggleCategory;
+    window.toggleCategory = toggleCategory;
     </script>
 
 </body>
