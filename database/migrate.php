@@ -11,7 +11,7 @@ use Database\Migrator;
 $command = $argv[1] ?? 'migrate';
 
 // Criar instância do migrator
-$migrator = new Migrator($pdo, __DIR__);
+$migrator = new Migrator($pdo);
 
 // Executar comando
 switch ($command) {

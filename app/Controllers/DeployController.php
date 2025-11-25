@@ -17,8 +17,8 @@ class DeployController
         try {
             $this->pdo = require __DIR__ . '/../../config/database.php';
             require_once __DIR__ . '/../helpers/whm_deploy.php';
-            require_once __DIR__ . '/../helpers/cloudflare_cdn.php';
-            require_once __DIR__ . '/../helpers/analytics_injector.php';
+          //  require_once __DIR__ . '/../helpers/cloudflare_cdn.php';
+           // require_once __DIR__ . '/../helpers/analytics_injector.php';
             $this->requireAuth();
         } catch (\Exception $e) {
             // Limpar buffer em caso de erro
