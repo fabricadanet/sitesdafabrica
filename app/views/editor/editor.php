@@ -78,7 +78,7 @@ else {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor Inteligente - Sites da Fábrica</title>
 
-    <link rel="stylesheet" href="/assets/css/editor.css">
+    <link rel="stylesheet" href="/assets/css/editor.css?v=<?= time() ?>">
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
@@ -365,7 +365,15 @@ else {
         </h5>
         <div id="categories-container"></div>
     </aside>
+    </aside>
 </main>
+
+<div id="loading-overlay" class="hidden">
+    <div class="spinner-container">
+        <img src="/assets/img/spinner-logo.png" alt="Loading..." class="spinner-logo">
+        <div class="spinner-text" id="loading-text">Processando...</div>
+    </div>
+</div>
 
 <script>
     const PROJECT_ID   = <?= json_encode($projectId) ?>;
@@ -686,41 +694,82 @@ else {
         setTimeout(() => tryBuildSidebar(attempt + 1), 150);
     }
 
+    function showLoading(text) {
+        const overlay = document.getElementById('loading-overlay');
+        const textEl = document.getElementById('loading-text');
+        if (text) textEl.textContent = text;
+        overlay.classList.remove('hidden');
+        // Force reflow
+        void overlay.offsetWidth;
+        overlay.classList.add('visible');
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.remove('visible');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 300);
+    }
+
     document.getElementById('saveProject').onclick = async () => {
-        const html = iframeDoc.documentElement.outerHTML;
-        const form = new FormData();
-        form.append('id', PROJECT_ID || '');
-        form.append('name', PROJECT_NAME);
-        form.append('html', html);
+        showLoading('Salvando projeto...');
+        try {
+            const html = iframeDoc.documentElement.outerHTML;
+            const form = new FormData();
+            form.append('id', PROJECT_ID || '');
+            form.append('name', PROJECT_NAME);
+            form.append('html', html);
 
-        if (TEMPLATE_ID) {
-            form.append('template_id', TEMPLATE_ID);
-        }
-
-        const res = await fetch('/projects/save', { method: 'POST', body: form });
-        const data = await res.json();
-
-        if (data.success) {
-            alert('Projeto salvo!');
-            if (!PROJECT_ID && data.project_id) {
-                window.location.href = '/editor?id=' + data.project_id;
+            if (TEMPLATE_ID) {
+                form.append('template_id', TEMPLATE_ID);
             }
-        } else {
-            alert('Erro ao salvar o projeto');
+
+            const res = await fetch('/projects/save', { method: 'POST', body: form });
+            const data = await res.json();
+
+            if (data.success) {
+                // Short delay to show success state
+                setTimeout(() => {
+                    hideLoading();
+                    // alert('Projeto salvo!'); // Removed for better UX
+                    if (!PROJECT_ID && data.project_id) {
+                        window.location.href = '/editor?id=' + data.project_id;
+                    }
+                }, 2500); // Increased to 2.5s for visibility
+            } else {
+                hideLoading();
+                console.error('Erro ao salvar o projeto');
+            }
+        } catch (e) {
+            hideLoading();
+            console.error('Erro de conexão ao salvar.', e);
         }
     };
 
     document.getElementById('preview').onclick = () => {
-        const blob = new Blob([iframeDoc.documentElement.outerHTML], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        showLoading('Abrindo preview...');
+        setTimeout(() => {
+            const blob = new Blob([iframeDoc.documentElement.outerHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            hideLoading();
+        }, 2000); // Increased to 2s
     };
 
     document.getElementById('downloadSite').onclick = async () => {
-        const zip = new JSZip();
-        zip.file('index.html', iframeDoc.documentElement.outerHTML);
-        const blob = await zip.generateAsync({ type: 'blob' });
-        saveAs(blob, PROJECT_NAME + '.zip');
+        showLoading('Gerando arquivo ZIP...');
+        try {
+            const zip = new JSZip();
+            zip.file('index.html', iframeDoc.documentElement.outerHTML);
+            const blob = await zip.generateAsync({ type: 'blob' });
+            saveAs(blob, PROJECT_NAME + '.zip');
+            hideLoading();
+        } catch (e) {
+            hideLoading();
+            alert('Erro ao gerar download.');
+            console.error(e);
+        }
     };
 
     window.toggleCategory = toggleCategory;

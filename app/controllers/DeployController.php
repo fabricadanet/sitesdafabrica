@@ -121,6 +121,7 @@ class DeployController
     // 🌐 ADICIONAR DOMÍNIO PERSONALIZADO
     public function addDomain()
     {
+        error_log("ADD-DOMAIN FOI CHAMADO");
         try {
             if (ob_get_level()) {
                 ob_clean();
@@ -148,7 +149,7 @@ class DeployController
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'message' => 'Erro ao adicionar domínio: ' . $e->getMessage()
+                'message' => 'Erro ao adicionar domínio deploy controller: ' . $e->getMessage()
             ]);
         }
     }
