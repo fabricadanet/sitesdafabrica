@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Sistema de Feedback</title>
+    <link rel="stylesheet" href="./assets/css/editor-feedback.css">
+    <script src="./assets/js/editor-feedback.js" defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4285f4;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #357ae8;
+            transform: translateY(-2px);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #4285f4;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Teste do Sistema de Feedback</h1>
+        
+        <div class="section">
+            <h2>Spinner</h2>
+            <div class="btn-group">
+                <button onclick="testSpinner()">Mostrar Spinner (3s)</button>
+                <button onclick="testSpinnerCustom()">Spinner Personalizado</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Toast Notifications</h2>
+            <div class="btn-group">
+                <button onclick="testToastSuccess()">Toast Sucesso</button>
+                <button onclick="testToastError()">Toast Erro</button>
+                <button onclick="testToastWarning()">Toast Aviso</button>
+                <button onclick="testToastInfo()">Toast Info</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Progress Bar</h2>
+            <div class="btn-group">
+                <button onclick="testProgressIndeterminate()">Progress Indeterminado</button>
+                <button onclick="testProgressDeterminate()">Progress Determinado</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Save Indicator</h2>
+            <div class="btn-group">
+                <button onclick="testSaveSuccess()">Salvar com Sucesso</button>
+                <button onclick="testSaveError()">Salvar com Erro</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Cenários Completos</h2>
+            <div class="btn-group">
+                <button onclick="testFullSaveScenario()">Simular Salvamento</button>
+                <button onclick="testFullLoadScenario()">Simular Carregamento</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const feedback = window.editorFeedback;
+
+        // Spinner Tests
+        function testSpinner() {
+            feedback.showSpinner('Carregando...', 'Aguarde um momento');
+            setTimeout(() => feedback.hideSpinner(), 3000);
+        }
+
+        function testSpinnerCustom() {
+            feedback.showSpinner('Processando template...', 'Isso pode levar alguns segundos');
+            setTimeout(() => {
+                feedback.hideSpinner();
+                feedback.success('Concluído!', 'Template carregado com sucesso');
+            }, 3000);
+        }
+
+        // Toast Tests
+        function testToastSuccess() {
+            feedback.success('Operação Concluída!', 'Seu projeto foi salvo com sucesso', 4000);
+        }
+
+        function testToastError() {
+            feedback.error('Erro de Conexão', 'Não foi possível conectar ao servidor. Tente novamente.', 5000);
+        }
+
+        function testToastWarning() {
+            feedback.warning('Atenção', 'Você tem alterações não salvas. Salve antes de sair.', 4000);
+        }
+
+        function testToastInfo() {
+            feedback.info('Dica', 'Use Ctrl+S para salvar rapidamente seu projeto', 5000);
+        }
+
+        // Progress Tests
+        function testProgressIndeterminate() {
+            feedback.showProgress();
+            setTimeout(() => feedback.hideProgress(), 3000);
+        }
+
+        function testProgressDeterminate() {
+            let progress = 0;
+            feedback.showProgress(0);
+            
+            const interval = setInterval(() => {
+                progress += 10;
+                feedback.showProgress(progress);
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => feedback.hideProgress(), 500);
+                }
+            }, 300);
+        }
+
+        // Save Indicator Tests
+        function testSaveSuccess() {
+            feedback.showSaving();
+            setTimeout(() => feedback.showSaved(), 2000);
+        }
+
+        function testSaveError() {
+            feedback.showSaving();
+            setTimeout(() => feedback.showSaveError(), 2000);
+        }
+
+        // Full Scenario Tests
+        function testFullSaveScenario() {
+            feedback.showSaving();
+            feedback.showProgress(0);
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                feedback.showProgress(progress);
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    feedback.hideProgress();
+                    feedback.showSaved();
+                    feedback.success('Projeto Salvo!', 'Todas as alterações foram salvas', 3000);
+                }
+            }, 400);
+        }
+
+        function testFullLoadScenario() {
+            feedback.showSpinner('Carregando projeto...', 'Preparando editor');
+            feedback.showProgress();
+            
+            setTimeout(() => {
+                feedback.hideSpinner();
+                feedback.hideProgress();
+                feedback.success('Editor Pronto!', 'Você já pode começar a editar', 3000);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
