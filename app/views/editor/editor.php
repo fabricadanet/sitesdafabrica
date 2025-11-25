@@ -77,12 +77,16 @@ else {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor Inteligente - Sites da Fábrica</title>
+    <!-- CSS do Sistema de Feedback -->
+    <link rel="stylesheet" href="/assets/css/editor-feedback.css">
+    <script src="/assets/js/editor-feedback.js" defer></script>
 
     <link rel="stylesheet" href="/assets/css/editor.css">
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
     <style>
+        /* ... existing styles ... */
         * { box-sizing: border-box; }
 
         body {
@@ -90,6 +94,8 @@ else {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f3f4f6;
         }
+
+        /* ... (keeping existing styles) ... */
 
         header {
             background: #1f2937;
@@ -149,6 +155,7 @@ else {
             display: flex;
             background: white;
             min-width: 0;
+            position: relative; /* For absolute positioning if needed */
         }
 
         #editorFrame {
@@ -337,6 +344,34 @@ else {
                 height: 60vh;
             }
         }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.3s ease;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
@@ -366,6 +401,11 @@ else {
         <div id="categories-container"></div>
     </aside>
 </main>
+
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p style="margin-top: 1rem; color: #374151; font-weight: 500;">Carregando...</p>
+</div>
 
 <script>
     const PROJECT_ID   = <?= json_encode($projectId) ?>;
@@ -669,25 +709,319 @@ else {
     }
 
     window.addEventListener('load', () => {
+        showLoading('Inicializando editor...');
         iframeDoc = iframe.contentDocument;
         iframeDoc.open();
         iframeDoc.write(INITIAL_HTML);
         iframeDoc.close();
 
+        // Inject Editor Styles and Scripts into Iframe
+        injectEditorTools(iframeDoc);
+
         tryBuildSidebar(0);
     });
 
+    function injectEditorTools(doc) {
+        // 1. Inject CSS for Toolbar and Selection
+        const style = doc.createElement('style');
+        style.id = 'sf-editor-style';
+        style.textContent = `
+            #sf-editor-toolbar {
+                position: fixed;
+                z-index: 9999;
+                background: #1f2937;
+                color: white;
+                padding: 8px;
+                border-radius: 6px;
+                display: none;
+                gap: 8px;
+                align-items: center;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                font-family: sans-serif;
+                font-size: 14px;
+            }
+            #sf-editor-toolbar button {
+                background: transparent;
+                border: 1px solid transparent;
+                color: #d1d5db;
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 14px;
+                transition: all 0.2s;
+            }
+            #sf-editor-toolbar button:hover {
+                background: #374151;
+                color: white;
+            }
+            #sf-editor-toolbar button.active {
+                background: #3b82f6;
+                color: white;
+            }
+            #sf-editor-toolbar select {
+                background: #374151;
+                color: white;
+                border: 1px solid #4b5563;
+                border-radius: 4px;
+                padding: 4px;
+                font-size: 12px;
+                outline: none;
+            }
+            #sf-editor-toolbar .divider {
+                width: 1px;
+                height: 20px;
+                background: #4b5563;
+                margin: 0 4px;
+            }
+            [contenteditable="true"] {
+                outline: 2px dashed #3b82f6;
+                outline-offset: 2px;
+            }
+            [contenteditable="true"]:focus {
+                outline: 2px solid #3b82f6;
+            }
+        `;
+        doc.head.appendChild(style);
+
+        // 2. Inject Toolbar HTML
+        const toolbar = doc.createElement('div');
+        toolbar.id = 'sf-editor-toolbar';
+        toolbar.innerHTML = `
+            <select id="sf-font-family">
+                <option value="">Fonte...</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
+                <option value="'Arial Black', Gadget, sans-serif">Arial Black</option>
+                <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+                <option value="Impact, Charcoal, sans-serif">Impact</option>
+                <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+            </select>
+            <div class="divider"></div>
+            <button data-cmd="bold" title="Negrito"><b>B</b></button>
+            <button data-cmd="italic" title="Itálico"><i>I</i></button>
+            <button data-cmd="underline" title="Sublinhado"><u>U</u></button>
+            <div class="divider"></div>
+            <button data-cmd="justifyLeft" title="Esquerda">⬅️</button>
+            <button data-cmd="justifyCenter" title="Centralizar">⏺️</button>
+            <button data-cmd="justifyRight" title="Direita">➡️</button>
+            <button data-cmd="justifyFull" title="Justificar">↔️</button>
+        `;
+        doc.body.appendChild(toolbar);
+
+        // 3. Inject JS Logic
+        let activeElement = null;
+
+        // Detect clicks on text elements
+        doc.body.addEventListener('click', (e) => {
+            const target = e.target;
+            
+            // Ignore clicks on the toolbar itself
+            if (target.closest('#sf-editor-toolbar')) return;
+
+            // Check if element is editable (text tags or data-edit)
+            const isText = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','LI','TD','DIV','BUTTON'].includes(target.tagName);
+            const hasDataEdit = target.hasAttribute('data-edit');
+
+            if (isText || hasDataEdit) {
+                e.preventDefault(); // Prevent link navigation etc.
+                activateElement(target);
+            } else {
+                hideToolbar();
+            }
+        });
+
+        function activateElement(el) {
+            if (activeElement && activeElement !== el) {
+                activeElement.contentEditable = "false";
+            }
+            
+            activeElement = el;
+
+            // Auto-assign data-edit if missing to persist editability
+            if (!activeElement.hasAttribute('data-edit')) {
+                const tagName = activeElement.tagName.toLowerCase();
+                const uniqueId = tagName + '-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                activeElement.setAttribute('data-edit', uniqueId);
+            }
+
+            activeElement.contentEditable = "true";
+            activeElement.focus();
+            
+            updateToolbarPosition(el);
+            updateToolbarState(el);
+            
+            toolbar.style.display = 'flex';
+        }
+
+        function hideToolbar() {
+            if (activeElement) {
+                activeElement.contentEditable = "false";
+                activeElement = null;
+            }
+            toolbar.style.display = 'none';
+        }
+
+        function updateToolbarPosition(el) {
+            const rect = el.getBoundingClientRect();
+            const toolbarRect = toolbar.getBoundingClientRect();
+            
+            let top = rect.top - toolbarRect.height - 10;
+            let left = rect.left;
+
+            // Keep within viewport
+            if (top < 0) top = rect.bottom + 10;
+            if (left + toolbarRect.width > window.innerWidth) left = window.innerWidth - toolbarRect.width - 10;
+            if (left < 0) left = 10;
+
+            toolbar.style.top = top + 'px';
+            toolbar.style.left = left + 'px';
+        }
+
+        function updateToolbarState(el) {
+            // Update button states based on current selection style
+            const computed = window.getComputedStyle(el);
+            
+            // Font Family
+            const fontSelect = toolbar.querySelector('#sf-font-family');
+            // Simple check - might need more robust matching
+            // We can try to match the computed font family with options
+            let currentFont = computed.fontFamily.replace(/['"]/g, ''); // Remove quotes for easier matching
+            
+            // Reset first
+            fontSelect.value = '';
+            
+            for (let i = 0; i < fontSelect.options.length; i++) {
+                let optVal = fontSelect.options[i].value.replace(/['"]/g, '');
+                if (optVal && currentFont.includes(optVal.split(',')[0])) { // Match primary font
+                     fontSelect.selectedIndex = i;
+                     break;
+                }
+            }
+            
+            // Buttons
+            const isBold = computed.fontWeight === '700' || computed.fontWeight === 'bold' || parseInt(computed.fontWeight) >= 700;
+            const isItalic = computed.fontStyle === 'italic';
+            const isUnderline = computed.textDecorationLine.includes('underline');
+            
+            toolbar.querySelector('[data-cmd="bold"]').classList.toggle('active', isBold);
+            toolbar.querySelector('[data-cmd="italic"]').classList.toggle('active', isItalic);
+            toolbar.querySelector('[data-cmd="underline"]').classList.toggle('active', isUnderline);
+            
+            // Alignment
+            const align = computed.textAlign;
+            toolbar.querySelector('[data-cmd="justifyLeft"]').classList.toggle('active', align === 'left' || align === 'start');
+            toolbar.querySelector('[data-cmd="justifyCenter"]').classList.toggle('active', align === 'center');
+            toolbar.querySelector('[data-cmd="justifyRight"]').classList.toggle('active', align === 'right');
+            toolbar.querySelector('[data-cmd="justifyFull"]').classList.toggle('active', align === 'justify');
+        }
+
+        // Toolbar Actions
+        toolbar.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const cmd = btn.dataset.cmd;
+                
+                if (activeElement) {
+                    // Direct Style Manipulation
+                    switch(cmd) {
+                        case 'bold':
+                            activeElement.style.fontWeight = (activeElement.style.fontWeight === 'bold' || activeElement.style.fontWeight === '700') ? 'normal' : 'bold';
+                            break;
+                        case 'italic':
+                            activeElement.style.fontStyle = (activeElement.style.fontStyle === 'italic') ? 'normal' : 'italic';
+                            break;
+                        case 'underline':
+                            activeElement.style.textDecoration = (activeElement.style.textDecoration.includes('underline')) ? 'none' : 'underline';
+                            break;
+                        case 'justifyLeft':
+                            activeElement.style.textAlign = 'left';
+                            break;
+                        case 'justifyCenter':
+                            activeElement.style.textAlign = 'center';
+                            break;
+                        case 'justifyRight':
+                            activeElement.style.textAlign = 'right';
+                            break;
+                        case 'justifyFull':
+                            activeElement.style.textAlign = 'justify';
+                            break;
+                    }
+                    
+                    activeElement.focus(); // Keep focus
+                    updateToolbarState(activeElement);
+                }
+            });
+        });
+
+        toolbar.querySelector('#sf-font-family').addEventListener('change', (e) => {
+            const font = e.target.value;
+            if (activeElement && font) {
+                // execCommand 'fontName' is tricky with custom fonts, let's try style
+                // doc.execCommand('fontName', false, font); 
+                // Better to apply style directly to the element for block level
+                activeElement.style.fontFamily = font;
+                activeElement.focus();
+            }
+        });
+
+        // Update position on scroll/resize
+        window.addEventListener('scroll', () => {
+            if (activeElement) updateToolbarPosition(activeElement);
+        }, true);
+        window.addEventListener('resize', () => {
+            if (activeElement) updateToolbarPosition(activeElement);
+        });
+    }
+
+
     function tryBuildSidebar(attempt) {
-        if (attempt > 10) return;
+        if (attempt > 10) {
+            hideLoading();
+            return;
+        }
         if (iframeDoc.body && iframeDoc.querySelector('style')) {
             buildSidebar();
+            hideLoading();
             return;
         }
         setTimeout(() => tryBuildSidebar(attempt + 1), 150);
     }
 
+    function showLoading(msg = 'Carregando...') {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.querySelector('p').textContent = msg;
+        overlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    function getCleanHTML() {
+        // Clone the document to avoid modifying the live editor
+        const clone = iframeDoc.documentElement.cloneNode(true);
+        
+        // Remove editor artifacts from the clone
+        const toolbar = clone.querySelector('#sf-editor-toolbar');
+        if (toolbar) toolbar.remove();
+        
+        const editables = clone.querySelectorAll('[contenteditable]');
+        editables.forEach(el => el.removeAttribute('contenteditable'));
+
+        const editorStyle = clone.querySelector('#sf-editor-style');
+        if (editorStyle) editorStyle.remove();
+
+        return clone.outerHTML;
+    }
+
     document.getElementById('saveProject').onclick = async () => {
-        const html = iframeDoc.documentElement.outerHTML;
+        showLoading('Salvando projeto...');
+        const html = getCleanHTML();
         const form = new FormData();
         form.append('id', PROJECT_ID || '');
         form.append('name', PROJECT_NAME);
@@ -697,30 +1031,47 @@ else {
             form.append('template_id', TEMPLATE_ID);
         }
 
-        const res = await fetch('/projects/save', { method: 'POST', body: form });
-        const data = await res.json();
+        try {
+            const res = await fetch('/projects/save', { method: 'POST', body: form });
+            const data = await res.json();
 
-        if (data.success) {
-            alert('Projeto salvo!');
-            if (!PROJECT_ID && data.project_id) {
-                window.location.href = '/editor?id=' + data.project_id;
+            if (data.success) {
+                alert('Projeto salvo!');
+                if (!PROJECT_ID && data.project_id) {
+                    window.location.href = '/editor?id=' + data.project_id;
+                }
+            } else {
+                alert('Erro ao salvar o projeto');
             }
-        } else {
-            alert('Erro ao salvar o projeto');
+        } catch (e) {
+            alert('Erro de conexão ao salvar');
+        } finally {
+            hideLoading();
         }
     };
 
     document.getElementById('preview').onclick = () => {
-        const blob = new Blob([iframeDoc.documentElement.outerHTML], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        showLoading('Gerando preview...');
+        setTimeout(() => {
+            const blob = new Blob([getCleanHTML()], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            hideLoading();
+        }, 500);
     };
 
     document.getElementById('downloadSite').onclick = async () => {
-        const zip = new JSZip();
-        zip.file('index.html', iframeDoc.documentElement.outerHTML);
-        const blob = await zip.generateAsync({ type: 'blob' });
-        saveAs(blob, PROJECT_NAME + '.zip');
+        showLoading('Gerando arquivo ZIP...');
+        try {
+            const zip = new JSZip();
+            zip.file('index.html', getCleanHTML());
+            const blob = await zip.generateAsync({ type: 'blob' });
+            saveAs(blob, PROJECT_NAME + '.zip');
+        } catch (e) {
+            alert('Erro ao gerar download');
+        } finally {
+            hideLoading();
+        }
     };
 
     window.toggleCategory = toggleCategory;

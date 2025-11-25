@@ -1,4 +1,222 @@
 const iframe = document.getElementById('editorFrame');
+
+// ==============================
+// Adicionar após a linha: const iframe = document.getElementById("editorFrame");
+// ==============================
+
+// Sistema de Feedback
+const feedback = window.editorFeedback;
+
+// ==============================
+// Modificar: window.addEventListener('load')
+// ==============================
+
+window.addEventListener('load', () => {
+  feedback.showSpinner('Carregando template...', 'Preparando seu editor');
+  
+  iframeDoc = iframe.contentDocument;
+  iframeDoc.open();
+  iframeDoc.write(INITIAL_HTML);
+  iframeDoc.close();
+
+  tryBuildSidebar(0);
+  
+  // Esconder spinner quando carregar
+  setTimeout(() => {
+    feedback.hideSpinner();
+    feedback.success('Editor Pronto!', 'Você já pode começar a editar', 3000);
+  }, 800);
+});
+
+// ==============================
+// Modificar: Salvar Projeto
+// ==============================
+
+document.getElementById('saveProject').onclick = async () => {
+  feedback.showSaving();
+  feedback.showProgress(); // Barra de progresso indeterminada
+
+  const contentHtml = iframeDoc.documentElement.outerHTML;
+
+  // Captura variáveis globais (CSS)
+  const cssVars = {};
+  const styles = getComputedStyle(iframeDoc.documentElement);
+  [...styles].forEach(n => {
+    if (n.startsWith('--')) cssVars[n] = styles.getPropertyValue(n).trim();
+  });
+
+  const form = new FormData();
+  form.append('id', PROJECT_ID || '');
+  form.append('title', PROJECT_TITLE);
+  form.append('template', TEMPLATE_NAME); 
+  form.append('content_html', contentHtml);
+  form.append('global_vars', JSON.stringify(cssVars));
+
+  try {
+    const res = await fetch('/projects/save', { method: 'POST', body: form });
+    const data = await res.json();
+
+    feedback.hideProgress();
+
+    if (data.success) {
+      feedback.showSaved();
+      feedback.success('Projeto Salvo!', 'Todas as alterações foram salvas com sucesso', 4000);
+      
+      if (!PROJECT_ID && data.id) {
+        setTimeout(() => {
+          window.location.href = `/editor?id=${data.id}&template=${TEMPLATE_NAME}`;
+        }, 1500);
+      }
+    } else {
+      feedback.showSaveError();
+      feedback.error('Erro ao Salvar', data.message || 'Não foi possível salvar o projeto', 5000);
+    }
+  } catch (error) {
+    feedback.hideProgress();
+    feedback.showSaveError();
+    feedback.error('Erro de Conexão', 'Verifique sua conexão e tente novamente', 5000);
+    console.error('Erro ao salvar:', error);
+  }
+};
+
+// ==============================
+// Modificar: Preview
+// ==============================
+
+document.getElementById('preview').onclick = () => {
+  feedback.showSpinner('Gerando preview...', 'Aguarde um momento');
+  
+  const blob = new Blob([iframeDoc.documentElement.outerHTML], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  
+  setTimeout(() => {
+    feedback.hideSpinner();
+    window.open(url, '_blank');
+    feedback.info('Preview Gerado', 'Abrindo em nova aba', 2000);
+  }, 500);
+};
+
+// ==============================
+// Modificar: Download
+// ==============================
+
+document.getElementById('downloadSite').onclick = async () => {
+  feedback.showSpinner('Preparando download...', 'Compactando arquivos');
+  feedback.showProgress(0);
+
+  try {
+    const zip = new JSZip();
+    zip.file('index.html', iframeDoc.documentElement.outerHTML);
+    
+    feedback.showProgress(50);
+    
+    const blob = await zip.generateAsync({ 
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 9 }
+    });
+    
+    feedback.showProgress(100);
+    
+    setTimeout(() => {
+      saveAs(blob, PROJECT_NAME + '.zip');
+      feedback.hideSpinner();
+      feedback.hideProgress();
+      feedback.success('Download Iniciado!', 'Seu site foi baixado com sucesso', 3000);
+    }, 500);
+    
+  } catch (error) {
+    feedback.hideSpinner();
+    feedback.hideProgress();
+    feedback.error('Erro no Download', 'Não foi possível gerar o arquivo', 5000);
+    console.error('Erro:', error);
+  }
+};
+
+// ==============================
+// Auto-save (Novo)
+// ==============================
+
+let autoSaveTimeout;
+let hasUnsavedChanges = false;
+
+function triggerAutoSave() {
+  hasUnsavedChanges = true;
+  clearTimeout(autoSaveTimeout);
+  
+  autoSaveTimeout = setTimeout(async () => {
+    if (!hasUnsavedChanges) return;
+    
+    feedback.showSaving();
+    
+    const contentHtml = iframeDoc.documentElement.outerHTML;
+    const cssVars = {};
+    const styles = getComputedStyle(iframeDoc.documentElement);
+    [...styles].forEach(n => {
+      if (n.startsWith('--')) cssVars[n] = styles.getPropertyValue(n).trim();
+    });
+
+    const form = new FormData();
+    form.append('id', PROJECT_ID || '');
+    form.append('title', PROJECT_TITLE);
+    form.append('template', TEMPLATE_NAME);
+    form.append('content_html', contentHtml);
+    form.append('global_vars', JSON.stringify(cssVars));
+
+    try {
+      const res = await fetch('/projects/save', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (data.success) {
+        feedback.showSaved();
+        hasUnsavedChanges = false;
+      } else {
+        feedback.showSaveError();
+      }
+    } catch (error) {
+      feedback.showSaveError();
+      console.error('Auto-save falhou:', error);
+    }
+  }, 3000); // Auto-save após 3 segundos de inatividade
+}
+
+// Adicionar listeners para detectar mudanças
+function tryBuildSidebar(attempt) {
+  if (attempt > 10) return console.warn("❌ Timeout ao inicializar painel lateral.");
+
+  try {
+    const ready = iframeDoc && iframeDoc.body && iframeDoc.body.querySelectorAll('[data-edit]').length > 0;
+    if (ready) {
+      buildSidebar();
+      console.log(`✅ Painel lateral inicializado (tentativa ${attempt + 1})`);
+      
+      // Adicionar listeners para auto-save
+      const allInputs = document.querySelectorAll('#vars-container input, #texts-container textarea, #images-container input');
+      allInputs.forEach(input => {
+        input.addEventListener('input', triggerAutoSave);
+        input.addEventListener('change', triggerAutoSave);
+      });
+      
+      return;
+    }
+  } catch (e) {
+    console.warn("Iframe ainda carregando...", e);
+  }
+
+  setTimeout(() => tryBuildSidebar(attempt + 1), 150);
+}
+
+// ==============================
+// Aviso ao sair com mudanças não salvas
+// ==============================
+
+window.addEventListener('beforeunload', (e) => {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = 'Você tem alterações não salvas. Deseja realmente sair?';
+    return e.returnValue;
+  }
+});
 let iframeDoc = null;
 let currentTemplate = TEMPLATE_NAME || 'institucional';
 let currentHTML = '';

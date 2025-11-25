@@ -1,0 +1,398 @@
+/* ==========================================
+   SPINNER PERSONALIZADO - SITES DA FÁBRICA
+   ========================================== */
+
+.sf-spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sf-spinner-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sf-spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Logo Animado */
+.sf-spinner-logo {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    animation: logoFloat 2s ease-in-out infinite;
+}
+
+.sf-spinner-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(66, 133, 244, 0.5));
+}
+
+/* Animação de Float */
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* Spinner Circular ao redor da logo */
+.sf-spinner-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 140px;
+    height: 140px;
+    margin: -70px 0 0 -70px;
+    border: 3px solid transparent;
+    border-top-color: #4285f4;
+    border-right-color: #7c3aed;
+    border-radius: 50%;
+    animation: spinRing 1.2s linear infinite;
+}
+
+@keyframes spinRing {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Pontos de progresso */
+.sf-spinner-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.sf-spinner-dot {
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #4285f4, #7c3aed);
+    border-radius: 50%;
+    animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.sf-spinner-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.sf-spinner-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+}
+
+/* Texto de status */
+.sf-spinner-text {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sf-spinner-subtext {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 5px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ==========================================
+   TOAST NOTIFICATIONS
+   ========================================== */
+
+.sf-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.sf-toast {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(450px);
+    animation: slideIn 0.4s ease forwards;
+    border-left: 4px solid #4285f4;
+}
+
+@keyframes slideIn {
+    to {
+        transform: translateX(0);
+    }
+}
+
+.sf-toast.removing {
+    animation: slideOut 0.3s ease forwards;
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(450px);
+        opacity: 0;
+    }
+}
+
+.sf-toast-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.sf-toast-content {
+    flex: 1;
+}
+
+.sf-toast-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 2px;
+}
+
+.sf-toast-message {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.sf-toast-close {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    font-size: 18px;
+    color: #6b7280;
+}
+
+.sf-toast-close:hover {
+    opacity: 1;
+}
+
+/* Variantes de Toast */
+.sf-toast.success {
+    border-left-color: #10b981;
+}
+
+.sf-toast.error {
+    border-left-color: #ef4444;
+}
+
+.sf-toast.warning {
+    border-left-color: #f59e0b;
+}
+
+.sf-toast.info {
+    border-left-color: #4285f4;
+}
+
+/* ==========================================
+   PROGRESS BAR
+   ========================================== */
+
+.sf-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #e5e7eb;
+    z-index: 9998;
+    overflow: hidden;
+}
+
+.sf-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4285f4, #7c3aed);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(66, 133, 244, 0.5);
+}
+
+.sf-progress-bar.indeterminate .sf-progress-fill {
+    width: 30%;
+    animation: progressIndeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progressIndeterminate {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(400%);
+    }
+}
+
+/* ==========================================
+   SKELETON LOADING
+   ========================================== */
+
+.sf-skeleton {
+    background: linear-gradient(
+        90deg,
+        #f3f4f6 0%,
+        #e5e7eb 50%,
+        #f3f4f6 100%
+    );
+    background-size: 200% 100%;
+    animation: skeletonLoading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeletonLoading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.sf-skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+}
+
+.sf-skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 12px;
+}
+
+.sf-skeleton-card {
+    height: 200px;
+    width: 100%;
+}
+
+/* ==========================================
+   SAVE INDICATOR
+   ========================================== */
+
+.sf-save-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9997;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sf-save-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sf-save-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.sf-save-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.sf-save-indicator.saving .sf-save-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
+
+@media (max-width: 768px) {
+    .sf-toast-container {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
+
+    .sf-spinner-logo {
+        width: 100px;
+        height: 100px;
+    }
+
+    .sf-spinner-ring {
+        width: 120px;
+        height: 120px;
+        margin: -60px 0 0 -60px;
+    }
+
+    .sf-spinner-text {
+        font-size: 16px;
+    }
+
+    .sf-save-indicator {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        justify-content: center;
+    }
+}
