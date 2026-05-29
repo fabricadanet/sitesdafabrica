@@ -14,5 +14,13 @@
     ],
     "require": {
         "ext-pdo": "*"
+    },
+    "scripts": {
+        "dev": "php -S 0.0.0.0:8000 -t public",
+        "migrate": "php database/migrate.php migrate",
+        "rollback": "php database/migrate.php rollback",
+        "seed": "php database/migrate.php seed",
+        "fresh": "php database/migrate.php fresh",
+        "reset": "php database/reset.php"
     }
 }

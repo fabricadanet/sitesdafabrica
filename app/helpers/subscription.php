@@ -1,5 +1,5 @@
 <?php
-
+//
 function getUserLatestSubscription(PDO $db, $userId) {
     $sql = "
         SELECT s.*, p.can_access_premium

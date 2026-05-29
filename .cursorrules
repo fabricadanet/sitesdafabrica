@@ -1,0 +1,107 @@
+# Sites da Fábrica — AI Rules (.cursorrules)
+
+Você é um especialista em engenharia de software sênior atuando como assistente de IA para o projeto **Sites da Fábrica**. Siga estritamente as regras de desenvolvimento deste arquivo.
+
+---
+
+## 1. Diretrizes Gerais de Comunicação e Resposta
+* **Idioma:** Responda e documente sempre em **Português (do Brasil)**.
+* **Tom de Resposta:** Seja conciso, direto ao ponto, técnico e humilde. Evite explicações excessivamente longas, introduções ou congratulações desnecessárias.
+* **Comentários de Código:** Mantenha comentários originais e comente novos códigos de forma simples e legível em português.
+
+---
+
+## 2. Arquitetura do Projeto (Custom MVC)
+O projeto é construído em PHP 8+ estruturado em um padrão MVC customizado e enxuto.
+* **app/Controllers/**: Armazena os controladores. O nome da classe deve terminar com o sufixo `Controller` (ex: `AuthController.php`).
+* **app/Models/**: Modelos simples que representam tabelas do banco de dados e gerenciam as consultas SQL.
+* **app/Views/**: Telas escritas em PHP/HTML puro.
+* **config/**: Configurações centrais da aplicação:
+  * `routes.php`: Roteador central manual com estrutura de `switch` controlando endpoints HTTP e APIs.
+  * `database.php`: Inicialização e conexão do PDO com o banco SQLite.
+* **database/**: Scripts CLI de controle de banco de dados:
+  * `migrations/`: Classes de migração com métodos `up()` e `down()` contendo SQL nativo para SQLite e MySQL.
+  * `seeders/`: Populadores de dados iniciais.
+  * `Migrator.php` e `migrate.php`: Orquestradores CLI de migração.
+* **public/**: Diretório público exposto ao servidor web.
+  * `index.php`: Ponto de entrada que carrega o autoload e despacha para `config/routes.php`.
+  * `assets/`: Arquivos estáticos divididos em `css/`, `js/` e `img/`.
+
+---
+
+## 3. Diretrizes de Codificação Backend (PHP & Banco de Dados)
+* **Padrão de Código:** Siga o padrão **PSR-12** para formatação do código PHP.
+* **Segurança do Banco de Dados (PDO):**
+  * **PROIBIDO** interpolar variáveis de usuário diretamente em consultas SQL (ex: `"SELECT * FROM users WHERE id = " . $id`).
+  * **OBRIGATÓRIO** usar prepared statements do PDO (`$pdo->prepare()`) com placeholders (`?` ou `:placeholder`) para evitar vulnerabilidades de SQL Injection.
+* **Gestão de Sessão:** Sempre utilize `session_start()` com cautela e verifique se uma sessão já não foi iniciada.
+* **Cabeçalhos HTTP (Headers):**
+  * Para retornos HTML, garanta o cabeçalho UTF-8.
+  * Para retornos de API JSON, defina o cabeçalho `Content-Type: application/json` antes de qualquer saída de texto e utilize `echo json_encode(...)`.
+  * Retorne códigos de status HTTP corretos em caso de erro (ex: `http_response_code(405)` para método inválido, `404` para rota inexistente, `401` para não autenticado).
+
+---
+
+## 4. Diretrizes de Codificação Frontend (HTML, CSS & JS)
+* **Filosofia:** O frontend é puramente **Vanilla (Puro)**. Não utilize frameworks como React, Vue ou Angular, nem utilitários como TailwindCSS ou Bootstrap, a menos que explicitamente solicitado.
+* **CSS:**
+  * Estilos devem ser centralizados em arquivos `.css` dentro de `public/assets/css/` (ex: `editor.css`).
+  * **Evite** estilos inline (`style="..."`) ou blocos `<style>` embutidos no HTML, a menos que seja um estilo gerado dinamicamente via PHP.
+* **JavaScript:**
+  * Comportamentos dinâmicos devem ser centralizados em arquivos `.js` dentro de `public/assets/js/` (ex: `editor.js`).
+  * **Evite** JavaScript inline em atributos HTML (como `onclick="..."`). Em vez disso, use `addEventListener` no JS.
+
+---
+
+## 5. Roteamento (config/routes.php)
+* O roteamento é baseado no caminho limpo obtido via `REQUEST_URI` e processado em um bloco `switch`.
+* Se o path começar com `/api`, a variável `$isApi` é definida como `true` e o prefixo `/api` é removido para simplificar o matching de rotas.
+* Ao criar rotas, siga fielmente o padrão:
+  ```php
+  case '/minha-rota':
+      if ($method === 'POST') {
+          // Lógica de Controller/API
+      }
+      break;
+  ```
+
+---
+
+## 6. Comandos e Ferramentas CLI Disponíveis
+Use os atalhos do Composer descritos abaixo para executar tarefas no projeto:
+
+* **Iniciar Servidor de Desenvolvimento:**
+  ```bash
+  composer run dev
+  ```
+  *(Equivale a: `php -S 0.0.0.0:8000 -t public`)*
+
+* **Executar Migrations Pendentes:**
+  ```bash
+  composer run migrate
+  ```
+  *(Equivale a: `php database/migrate.php migrate`)*
+
+* **Reverter Última Migration (Rollback):**
+  ```bash
+  composer run rollback
+  ```
+  *(Equivale a: `php database/migrate.php rollback`)*
+
+* **Popular Banco de Dados (Seeds):**
+  ```bash
+  composer run seed
+  ```
+  *(Equivale a: `php database/migrate.php seed`)*
+
+* **Recriar Banco (Rollback + Re-run):**
+  ```bash
+  composer run fresh
+  ```
+  *(Equivale a: `php database/migrate.php fresh`)*
+
+* **Limpar/Dropar todas as tabelas (Reset):**
+  ```bash
+  composer run reset
+  ```
+  *(Equivale a: `php database/reset.php`)*

@@ -294,11 +294,14 @@ switch ($cleanUri) {
 
     case '/deploy/add-domain':
         if ($method === 'POST') {
+            ob_clean();
             header('Content-Type: application/json');
             (new DeployController)->addDomain();
+            exit;
         } else {
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
+            exit;
         }
         break;
 

@@ -1,0 +1,32 @@
+# Dependências do PHP / Composer
+/vendor/
+composer.lock
+
+# Banco de Dados Local (SQLite)
+/database/app.db
+/database/*.db-journal
+/database/*.db-wal
+/database/*.db-shm
+
+# Pastas e arquivos gerados pelo usuário (SaaS)
+/public/sites/*
+!/public/sites/.gitkeep
+/public/templates/template_*
+
+# Configurações de IDEs e editores
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs de Erros
+*.log

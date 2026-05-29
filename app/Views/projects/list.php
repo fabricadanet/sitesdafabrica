@@ -3,6 +3,7 @@
 // Dashboard completo com deploy, domínios, CDN e analytics
 
 require_once __DIR__ . '/../../helpers/subscription.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -771,139 +772,139 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             }
         }
-    /* ===== UPGRADE CARDS ===== */
-    .upgrade-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-
-    .plan-card {
-        background: white;
-        border: 2px solid #eee;
-        border-radius: 12px;
-        padding: 24px;
-        transition: all 0.3s;
-        cursor: pointer;
-        position: relative;
-    }
-
-    .plan-card:hover {
-        border-color: #667eea;
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-        transform: translateY(-4px);
-    }
-
-    .plan-card.current {
-        border-color: #667eea;
-        background: #f9fafb;
-    }
-
-    .current-badge {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #4caf50;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .plan-name-header {
-        font-size: 24px;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    .plan-price {
-        font-size: 32px;
-        font-weight: 700;
-        color: #667eea;
-        margin-bottom: 5px;
-    }
-
-    .plan-price-period {
-        color: #999;
-        font-size: 14px;
-        margin-bottom: 20px;
-    }
-
-    .plan-features {
-        list-style: none;
-        margin: 20px 0;
-        padding: 0;
-    }
-
-    .plan-features li {
-        padding: 8px 0;
-        color: #666;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .plan-features i {
-        color: #4caf50;
-        font-size: 12px;
-    }
-
-    .plan-features li[style*="opacity"] i {
-        color: #dc2626;
-    }
-
-    .upgrade-button {
-        width: 100%;
-        background: #667eea;
-        color: white;
-        padding: 14px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        margin-top: 15px;
-        font-size: 15px;
-    }
-
-    .upgrade-button:hover {
-        background: #5568d3;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .upgrade-button.current {
-        background: #ddd;
-        color: #666;
-        cursor: default;
-    }
-
-    .upgrade-button.current:hover {
-        background: #ddd;
-        transform: none;
-        box-shadow: none;
-    }
-
-    .upgrade-button:disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-    }
-
-    .upgrade-button:disabled:hover {
-        transform: none;
-        box-shadow: none;
-    }
-
-    @media (max-width: 768px) {
+        /* ===== UPGRADE CARDS ===== */
         .upgrade-cards {
-            grid-template-columns: 1fr;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
-    }
+
+        .plan-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .plan-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .plan-card.current {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .current-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .plan-name-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .plan-price-period {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plan-features i {
+            color: #4caf50;
+            font-size: 12px;
+        }
+
+        .plan-features li[style*="opacity"] i {
+            color: #dc2626;
+        }
+
+        .upgrade-button {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        .upgrade-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .upgrade-button.current {
+            background: #ddd;
+            color: #666;
+            cursor: default;
+        }
+
+        .upgrade-button.current:hover {
+            background: #ddd;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .upgrade-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .upgrade-button:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 768px) {
+            .upgrade-cards {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -998,7 +999,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
         </div>
         <div class="form-group">
             <label for="ga-tracking-id">ID de Rastreamento (GA4)</label>
-            <input type="text" id="ga-tracking-id" placeholder="G-XXXXXXXXXX" 
+            <input type="text" id="ga-tracking-id" placeholder="G-XXXXXXXXXX"
                    value="<?= htmlspecialchars($_SESSION['ga_tracking_id'] ?? '') ?>">
             <div class="form-help">
                 Será injetado automaticamente em todos os seus projetos publicados.
@@ -1048,8 +1049,8 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                         </td>
                         <td>
                             <?php if ($project['published_url']): ?>
-                                <a href="<?= htmlspecialchars($project['published_url']) ?>" 
-                                   target="_blank" 
+                                <a href="<?= htmlspecialchars($project['published_url']) ?>"
+                                   target="_blank"
                                    style="color: #667eea; text-decoration: none;">
                                     <?= htmlspecialchars($project['subdomain'] ?? 'Ver site') ?>
                                 </a>
@@ -1070,34 +1071,34 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                                 </a>
 
                                 <?php if ($project['is_published']): ?>
-                                    <a href="<?= htmlspecialchars($project['published_url']) ?>" 
-                                       target="_blank" 
+                                    <a href="<?= htmlspecialchars($project['published_url']) ?>"
+                                       target="_blank"
                                        class="btn-action btn-view">
                                         <i class="fas fa-external-link-alt"></i> Ver
                                     </a>
 
-                                    <button class="btn-action btn-domains" 
+                                    <button class="btn-action btn-domains"
                                             onclick="showDomainsModal(<?= $project['id'] ?>, '<?= htmlspecialchars($project['name']) ?>')">
                                         <i class="fas fa-globe"></i> Domínios
                                     </button>
 
-                                    <button class="btn-action btn-cache" 
+                                    <button class="btn-action btn-cache"
                                             onclick="purgeCache(<?= $project['id'] ?>)">
                                         <i class="fas fa-sync"></i> Cache
                                     </button>
 
-                                    <button class="btn-action btn-unpublish" 
+                                    <button class="btn-action btn-unpublish"
                                             onclick="unpublishProject(<?= $project['id'] ?>)">
                                         <i class="fas fa-eye-slash"></i> Despublicar
                                     </button>
                                 <?php else: ?>
-                                    <button class="btn-action btn-publish" 
+                                    <button class="btn-action btn-publish"
                                             onclick="publishProject(<?= $project['id'] ?>)">
                                         <i class="fas fa-rocket"></i> Publicar
                                     </button>
                                 <?php endif; ?>
 
-                                <button class="btn-action btn-delete" 
+                                <button class="btn-action btn-delete"
                                         onclick="deleteProject(<?= $project['id'] ?>)">
                                     <i class="fas fa-trash"></i> Deletar
                                 </button>
@@ -1230,9 +1231,9 @@ require_once __DIR__ . '/../../helpers/subscription.php';
             .then(data => {
                 if (data.success) {
                     const container = document.getElementById('plansContainer');
-                    
+
                     if (!container) return; // Não está na página de upgrade
-                    
+
                     container.innerHTML = '';
 
                     if (data.plans.length === 0) {
@@ -1265,7 +1266,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                     `;
                         container.innerHTML += planHTML;
                     });
-                    
+
                     disableLowerPlans();
                 } else {
                     console.error('Erro ao carregar planos:', data.message);
@@ -1303,7 +1304,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
     function disableLowerPlans() {
         const currentPlanName = '<?= $planData['name'] ?? 'Gratuito' ?>';
         let currentPlanOrder = null;
-        
+
         document.querySelectorAll('.plan-card').forEach(card => {
             const planName = card.querySelector('.plan-name-header')?.textContent.trim();
             if (planName === currentPlanName) {
@@ -1323,7 +1324,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                 btn.disabled = true;
                 btn.style.cursor = 'not-allowed';
                 btn.style.opacity = '0.5';
-                
+
                 if (planDisplayOrder === currentPlanOrder) {
                     btn.textContent = 'Plano Atual';
                 } else {
@@ -1374,26 +1375,26 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                     } else {
                         data.templates.forEach(template => {
                             const isPremium = template.is_premium == 1;
-                            
-                            const premiumBadge = isPremium 
+
+                            const premiumBadge = isPremium
                                 ? `<span class="badge-premium">
                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                                      </svg>
                                      Premium
-                                   </span>` 
+                                   </span>`
                                 : '';
-                            
+
                             const templateCard = `
                                 <div class="template-card ${isPremium ? 'template-premium' : ''}" onclick="selectTemplate(${template.id}, '${template.name}')">
                                     ${premiumBadge}
                                     <div class="template-thumb">
-                                        ${template.thumb_file 
-                                            ? `<img src="/templates/thumbs/${template.thumb_file}" alt="${template.name}">` 
-                                            : `<div class="template-placeholder">
+                                        ${template.thumb_file
+                                ? `<img src="/templates/thumbs/${template.thumb_file}" alt="${template.name}">`
+                                : `<div class="template-placeholder">
                                                  <i class="fas fa-image"></i>
                                                </div>`
-                                        }
+                            }
                                     </div>
                                     <div class="template-info">
                                         <h6>${template.title || template.name}</h6>
@@ -1592,21 +1593,32 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                 body: formData
             });
 
-            const data = await res.json();
+            let raw = await res.text();
+            console.log("RAW RESPONSE:", raw);
+
+            let data;
+            try {
+                data = JSON.parse(raw);
+            } catch (e) {
+                console.error("Resposta inválida:", raw);
+                alert("Erro ao adicionar domínio: Resposta inválida do servidor.");
+                return;
+            }
 
             if (data.success) {
                 document.getElementById('customDomain').value = '';
-                
-                // Mostrar instruções DNS
+
                 document.getElementById('dnsInstructions').style.display = 'block';
                 document.getElementById('dnsRecord').textContent = data.instructions;
 
                 alert('✅ ' + data.message);
-                loadDomains();
+                await loadDomains();
             } else {
                 alert('❌ ' + data.message);
             }
+
         } catch (error) {
+            console.error('Erro completo:', error);
             alert('Erro ao adicionar domínio: ' + error.message);
         }
     }

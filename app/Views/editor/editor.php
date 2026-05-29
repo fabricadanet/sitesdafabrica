@@ -73,6 +73,7 @@ else {
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,330 +87,341 @@ else {
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
     <style>
-        /* ... existing styles ... */
-        * { box-sizing: border-box; }
+    /* ... existing styles ... */
+    * {
+        box-sizing: border-box;
+    }
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f3f4f6;
-        }
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f3f4f6;
+    }
 
-        /* ... (keeping existing styles) ... */
+    /* ... (keeping existing styles) ... */
 
-        header {
-            background: #1f2937;
-            color: white;
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+    header {
+        background: #1f2937;
+        color: white;
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-        header .brand {
-            font-weight: 600;
-            font-size: 1rem;
-        }
+    header .brand {
+        font-weight: 600;
+        font-size: 1rem;
+    }
 
-        .actions {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
+    .actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
 
-        .btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: background 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
+    .btn {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
 
-        .btn:hover {
-            background: #2563eb;
-        }
+    .btn:hover {
+        background: #2563eb;
+    }
 
-        .btn-logout {
-            background: #ef4444;
-        }
+    .btn-logout {
+        background: #ef4444;
+    }
 
-        .btn-logout:hover {
-            background: #dc2626;
-        }
+    .btn-logout:hover {
+        background: #dc2626;
+    }
 
+    main {
+        display: flex;
+        height: calc(100vh - 60px);
+        gap: 0;
+    }
+
+    .preview {
+        flex: 1;
+        display: flex;
+        background: white;
+        min-width: 0;
+        position: relative;
+        /* For absolute positioning if needed */
+    }
+
+    #editorFrame {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    #sidebar {
+        width: 380px;
+        background: #fff;
+        border-left: 1px solid #e5e7eb;
+        overflow-y: auto;
+        padding: 1.5rem;
+        box-shadow: -1px 0 3px rgba(0, 0, 0, 0.05);
+    }
+
+    #sidebar h5 {
+        margin: 0 0 1.5rem 0;
+        font-size: 1rem;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .category {
+        margin-bottom: 1.5rem;
+    }
+
+    .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f3f4f6;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s;
+        margin-bottom: 0.5rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .category-header:hover {
+        background: #e5e7eb;
+    }
+
+    .category-header h6 {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .collapse-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        transition: transform 0.3s ease;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .collapse-toggle.rotated {
+        transform: rotate(180deg);
+    }
+
+    .category-content {
+        max-height: 5000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .category-content.collapsed {
+        max-height: 0;
+    }
+
+    .field {
+        margin-bottom: 1rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.375rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .field-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    textarea.field-input {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    input[type="color"].field-input {
+        height: 40px;
+        padding: 0.25rem;
+        cursor: pointer;
+    }
+
+    input[type="range"].field-input {
+        height: 6px;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .image-preview {
+        width: 100%;
+        height: 120px;
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+    }
+
+    .image-preview.empty {
+        color: #9ca3af;
+        font-size: 0.75rem;
+        text-align: center;
+    }
+
+    #sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+
+    @media (max-width: 768px) {
         main {
-            display: flex;
-            height: calc(100vh - 60px);
-            gap: 0;
-        }
-
-        .preview {
-            flex: 1;
-            display: flex;
-            background: white;
-            min-width: 0;
-            position: relative; /* For absolute positioning if needed */
-        }
-
-        #editorFrame {
-            width: 100%;
-            height: 100%;
-            border: none;
+            flex-direction: column;
         }
 
         #sidebar {
-            width: 380px;
-            background: #fff;
-            border-left: 1px solid #e5e7eb;
-            overflow-y: auto;
-            padding: 1.5rem;
-            box-shadow: -1px 0 3px rgba(0,0,0,0.05);
-        }
-
-        #sidebar h5 {
-            margin: 0 0 1.5rem 0;
-            font-size: 1rem;
-            color: #1f2937;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .category {
-            margin-bottom: 1.5rem;
-        }
-
-        .category-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: #f3f4f6;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            margin-bottom: 0.5rem;
-            border: 1px solid #e5e7eb;
-        }
-
-        .category-header:hover {
-            background: #e5e7eb;
-        }
-
-        .category-header h6 {
-            margin: 0;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #1f2937;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .collapse-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            transition: transform 0.3s ease;
-            font-size: 0.75rem;
-            color: #6b7280;
-        }
-
-        .collapse-toggle.rotated {
-            transform: rotate(180deg);
-        }
-
-        .category-content {
-            max-height: 5000px;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-
-        .category-content.collapsed {
-            max-height: 0;
-        }
-
-        .field {
-            margin-bottom: 1rem;
-        }
-
-        .field-label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.375rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .field-input {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            height: 40vh;
+            border-left: none;
+            border-top: 1px solid #e5e7eb;
         }
 
-        .field-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        .preview {
+            height: 60vh;
+        }
+    }
+
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(5px);
+        z-index: 10000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        transition: opacity 0.3s ease;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(59, 130, 246, 0.1);
+        border-left-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
         }
 
-        textarea.field-input {
-            resize: vertical;
-            min-height: 80px;
+        100% {
+            transform: rotate(360deg);
         }
-
-        input[type="color"].field-input {
-            height: 40px;
-            padding: 0.25rem;
-            cursor: pointer;
-        }
-
-        input[type="range"].field-input {
-            height: 6px;
-            padding: 0;
-            cursor: pointer;
-        }
-
-        .image-preview {
-            width: 100%;
-            height: 120px;
-            background: #f9fafb;
-            border: 1px dashed #d1d5db;
-            border-radius: 0.375rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .image-preview img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: cover;
-        }
-
-        .image-preview.empty {
-            color: #9ca3af;
-            font-size: 0.75rem;
-            text-align: center;
-        }
-
-        #sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        #sidebar::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
-        }
-
-        #sidebar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-
-        @media (max-width: 768px) {
-            main {
-                flex-direction: column;
-            }
-
-            #sidebar {
-                width: 100%;
-                height: 40vh;
-                border-left: none;
-                border-top: 1px solid #e5e7eb;
-            }
-
-            .preview {
-                height: 60vh;
-            }
-        }
-
-        #loadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(5px);
-            z-index: 10000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            transition: opacity 0.3s ease;
-        }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(59, 130, 246, 0.1);
-            border-left-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    }
     </style>
 </head>
 
 <body>
 
-<header>
-    <div class="brand">⚡ Sites da Fábrica — Editor Inteligente</div>
-    <div class="actions">
-        <button id="saveProject" class="btn">💾 Salvar</button>
-        <button id="downloadSite" class="btn">⬇️ Baixar</button>
-        <button id="preview" class="btn">👁️ Preview</button>
-        <a href="/projects" class="btn">⬅️ Voltar</a>
-        <a href="/logout" class="btn btn-logout" onclick="return confirm('Tem certeza que deseja fazer logout?');">🚪 Sair</a>
+    <header>
+        <div class="brand">⚡ Sites da Fábrica — Editor Inteligente</div>
+        <div class="actions">
+            <button id="saveProject" class="btn">💾 Salvar</button>
+            <button id="downloadSite" class="btn">⬇️ Baixar</button>
+            <button id="preview" class="btn">👁️ Preview</button>
+            <a href="/projects" class="btn">⬅️ Voltar</a>
+            <a href="/logout" class="btn btn-logout"
+                onclick="return confirm('Tem certeza que deseja fazer logout?');">🚪 Sair</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="preview">
+            <iframe id="editorFrame"></iframe>
+        </div>
+
+        <aside id="sidebar">
+            <h5>
+                <span>🧱</span>
+                Editor de Conteúdo
+            </h5>
+            <div id="categories-container"></div>
+        </aside>
+    </main>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: #374151; font-weight: 500;">Carregando...</p>
     </div>
-</header>
 
-<main>
-    <div class="preview">
-        <iframe id="editorFrame"></iframe>
-    </div>
-
-    <aside id="sidebar">
-        <h5>
-            <span>🧱</span>
-            Editor de Conteúdo
-        </h5>
-        <div id="categories-container"></div>
-    </aside>
-</main>
-
-<div id="loadingOverlay">
-    <div class="spinner"></div>
-    <p style="margin-top: 1rem; color: #374151; font-weight: 500;">Carregando...</p>
-</div>
-
-<script>
-    const PROJECT_ID   = <?= json_encode($projectId) ?>;
-    const TEMPLATE_ID  = <?= json_encode($templateId) ?>;
+    <script>
+    const PROJECT_ID = <?= json_encode($projectId) ?>;
+    const TEMPLATE_ID = <?= json_encode($templateId) ?>;
     const PROJECT_NAME = <?= json_encode($projectName) ?>;
     const INITIAL_HTML = <?= json_encode($templateHtml) ?>;
 
@@ -487,7 +499,9 @@ else {
             if (!varNameTrimmed.startsWith('--')) return;
 
             const key = varNameTrimmed.substring(2);
-            const category = categorizeField(key, { tagName: 'STYLE' });
+            const category = categorizeField(key, {
+                tagName: 'STYLE'
+            });
 
             if (!categories[category]) {
                 categories[category] = [];
@@ -505,85 +519,54 @@ else {
             }
         });
     }
-function buildSidebar() {
-    console.log('🧱 Iniciando construção do painel lateral...');
-    
-    const container = document.getElementById('categories-container');
-    if (!container) {
-        console.error('❌ Container categories-container não encontrado!');
-        return;
-    }
-    
-    container.innerHTML = '';
+
+    function buildSidebar() {
+        const container = document.getElementById('categories-container');
+        container.innerHTML = '';
 
     const categories = {};
 
-    // Agrupa elementos com data-edit
-    const allElements = iframeDoc.querySelectorAll('[data-edit]');
-    console.log(`📝 Total de elementos [data-edit]: ${allElements.length}`);
-    
-    if (allElements.length === 0) {
-        container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">⚠️ Nenhum elemento editável encontrado no template</p>';
-        return;
-    }
-    
-    allElements.forEach(el => {
-        const key = el.dataset.edit;
-        const category = categorizeField(key, el);
+        // Agrupa elementos com data-edit
+        const allElements = iframeDoc.querySelectorAll('[data-edit]');
+        allElements.forEach(el => {
+            const key = el.dataset.edit;
+            const category = categorizeField(key, el);
 
         if (!categories[category]) {
             categories[category] = [];
         }
 
-        categories[category].push({
-            key,
-            element: el
+            categories[category].push({ key, element: el });
         });
-    });
-
-    console.log(`📂 Categorias criadas:`, Object.keys(categories));
 
     // Extrai variáveis CSS
     extractCSSVariables(categories);
 
-    // Renderiza categorias
-    Object.keys(categories).sort().forEach(categoryKey => {
-        const config = categoryConfigs[categoryKey] || {
-            name: categoryKey
-        };
-        const fields = categories[categoryKey];
+        // Renderiza categorias
+        Object.keys(categories).sort().forEach(categoryKey => {
+            const config = categoryConfigs[categoryKey] || { name: categoryKey };
+            const fields = categories[categoryKey];
 
-        console.log(`  ├─ ${config.name}: ${fields.length} campos`);
-
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category';
-        categoryDiv.innerHTML = `
-            <div class="category-header" onclick="toggleCategory(this)">
-                <h6>${config.name} [${fields.length}]</h6>
-                <div class="collapse-toggle">▼</div>
-            </div>
-            <div class="category-content"></div>
-        `;
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category';
+            categoryDiv.innerHTML = `
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <h6>${config.name} [${fields.length}]</h6>
+                    <div class="collapse-toggle">▼</div>
+                </div>
+                <div class="category-content"></div>
+            `;
 
         const contentDiv = categoryDiv.querySelector('.category-content');
 
-        fields.forEach(({
-            key,
-            element,
-            isCSSVar,
-            varName,
-            value
-        }) => {
-            const fieldDiv = createFieldInput(key, element, config.inputType, isCSSVar, varName,
-                value);
-            contentDiv.appendChild(fieldDiv);
-        });
+            fields.forEach(({ key, element, isCSSVar, varName, value }) => {
+                const fieldDiv = createFieldInput(key, element, config.inputType, isCSSVar, varName, value);
+                contentDiv.appendChild(fieldDiv);
+            });
 
-        container.appendChild(categoryDiv);
-    });
-    
-    console.log('✅ Painel lateral construído com sucesso');
-}
+            container.appendChild(categoryDiv);
+        });
+    }
 
     function createFieldInput(key, element, preferredType, isCSSVar, varName, cssValue) {
         const fieldDiv = document.createElement('div');
@@ -612,7 +595,7 @@ function buildSidebar() {
                 input.className = 'field-input';
                 input.value = parseInt(cssValue) || 0;
                 input.oninput = () => {
-                    const unit = cssValue.match(/[a-z%]+/i)?.[0] || 'px';
+                    const unit = cssValue.match(/[a-z%]+/i)?. [0] || 'px';
                     iframeDoc.documentElement.style.setProperty(varName, input.value + unit);
                 };
                 fieldDiv.appendChild(input);
@@ -850,12 +833,13 @@ function buildSidebar() {
         // Detect clicks on text elements
         doc.body.addEventListener('click', (e) => {
             const target = e.target;
-            
+
             // Ignore clicks on the toolbar itself
             if (target.closest('#sf-editor-toolbar')) return;
 
             // Check if element is editable (text tags or data-edit)
-            const isText = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','LI','TD','DIV','BUTTON'].includes(target.tagName);
+            const isText = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'SPAN', 'A', 'LI', 'TD', 'DIV', 'BUTTON']
+                .includes(target.tagName);
             const hasDataEdit = target.hasAttribute('data-edit');
 
             if (isText || hasDataEdit) {
@@ -870,7 +854,7 @@ function buildSidebar() {
             if (activeElement && activeElement !== el) {
                 activeElement.contentEditable = "false";
             }
-            
+
             activeElement = el;
 
             // Auto-assign data-edit if missing to persist editability
@@ -882,10 +866,10 @@ function buildSidebar() {
 
             activeElement.contentEditable = "true";
             activeElement.focus();
-            
+
             updateToolbarPosition(el);
             updateToolbarState(el);
-            
+
             toolbar.style.display = 'flex';
         }
 
@@ -900,7 +884,7 @@ function buildSidebar() {
         function updateToolbarPosition(el) {
             const rect = el.getBoundingClientRect();
             const toolbarRect = toolbar.getBoundingClientRect();
-            
+
             let top = rect.top - toolbarRect.height - 10;
             let left = rect.left;
 
@@ -916,36 +900,38 @@ function buildSidebar() {
         function updateToolbarState(el) {
             // Update button states based on current selection style
             const computed = window.getComputedStyle(el);
-            
+
             // Font Family
             const fontSelect = toolbar.querySelector('#sf-font-family');
             // Simple check - might need more robust matching
             // We can try to match the computed font family with options
             let currentFont = computed.fontFamily.replace(/['"]/g, ''); // Remove quotes for easier matching
-            
+
             // Reset first
             fontSelect.value = '';
-            
+
             for (let i = 0; i < fontSelect.options.length; i++) {
                 let optVal = fontSelect.options[i].value.replace(/['"]/g, '');
                 if (optVal && currentFont.includes(optVal.split(',')[0])) { // Match primary font
-                     fontSelect.selectedIndex = i;
-                     break;
+                    fontSelect.selectedIndex = i;
+                    break;
                 }
             }
-            
+
             // Buttons
-            const isBold = computed.fontWeight === '700' || computed.fontWeight === 'bold' || parseInt(computed.fontWeight) >= 700;
+            const isBold = computed.fontWeight === '700' || computed.fontWeight === 'bold' || parseInt(computed
+                .fontWeight) >= 700;
             const isItalic = computed.fontStyle === 'italic';
             const isUnderline = computed.textDecorationLine.includes('underline');
-            
+
             toolbar.querySelector('[data-cmd="bold"]').classList.toggle('active', isBold);
             toolbar.querySelector('[data-cmd="italic"]').classList.toggle('active', isItalic);
             toolbar.querySelector('[data-cmd="underline"]').classList.toggle('active', isUnderline);
-            
+
             // Alignment
             const align = computed.textAlign;
-            toolbar.querySelector('[data-cmd="justifyLeft"]').classList.toggle('active', align === 'left' || align === 'start');
+            toolbar.querySelector('[data-cmd="justifyLeft"]').classList.toggle('active', align === 'left' || align ===
+                'start');
             toolbar.querySelector('[data-cmd="justifyCenter"]').classList.toggle('active', align === 'center');
             toolbar.querySelector('[data-cmd="justifyRight"]').classList.toggle('active', align === 'right');
             toolbar.querySelector('[data-cmd="justifyFull"]').classList.toggle('active', align === 'justify');
@@ -956,18 +942,22 @@ function buildSidebar() {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const cmd = btn.dataset.cmd;
-                
+
                 if (activeElement) {
                     // Direct Style Manipulation
-                    switch(cmd) {
+                    switch (cmd) {
                         case 'bold':
-                            activeElement.style.fontWeight = (activeElement.style.fontWeight === 'bold' || activeElement.style.fontWeight === '700') ? 'normal' : 'bold';
+                            activeElement.style.fontWeight = (activeElement.style.fontWeight ===
+                                    'bold' || activeElement.style.fontWeight === '700') ? 'normal' :
+                                'bold';
                             break;
                         case 'italic':
-                            activeElement.style.fontStyle = (activeElement.style.fontStyle === 'italic') ? 'normal' : 'italic';
+                            activeElement.style.fontStyle = (activeElement.style.fontStyle ===
+                                'italic') ? 'normal' : 'italic';
                             break;
                         case 'underline':
-                            activeElement.style.textDecoration = (activeElement.style.textDecoration.includes('underline')) ? 'none' : 'underline';
+                            activeElement.style.textDecoration = (activeElement.style.textDecoration
+                                .includes('underline')) ? 'none' : 'underline';
                             break;
                         case 'justifyLeft':
                             activeElement.style.textAlign = 'left';
@@ -982,7 +972,7 @@ function buildSidebar() {
                             activeElement.style.textAlign = 'justify';
                             break;
                     }
-                    
+
                     activeElement.focus(); // Keep focus
                     updateToolbarState(activeElement);
                 }
@@ -1036,11 +1026,11 @@ function buildSidebar() {
     function getCleanHTML() {
         // Clone the document to avoid modifying the live editor
         const clone = iframeDoc.documentElement.cloneNode(true);
-        
+
         // Remove editor artifacts from the clone
         const toolbar = clone.querySelector('#sf-editor-toolbar');
         if (toolbar) toolbar.remove();
-        
+
         const editables = clone.querySelectorAll('[contenteditable]');
         editables.forEach(el => el.removeAttribute('contenteditable'));
 
@@ -1063,7 +1053,10 @@ function buildSidebar() {
         }
 
         try {
-            const res = await fetch('/projects/save', { method: 'POST', body: form });
+            const res = await fetch('/projects/save', {
+                method: 'POST',
+                body: form
+            });
             const data = await res.json();
 
             if (data.success) {
@@ -1084,7 +1077,9 @@ function buildSidebar() {
     document.getElementById('preview').onclick = () => {
         showLoading('Gerando preview...');
         setTimeout(() => {
-            const blob = new Blob([getCleanHTML()], { type: 'text/html' });
+            const blob = new Blob([getCleanHTML()], {
+                type: 'text/html'
+            });
             const url = URL.createObjectURL(blob);
             window.open(url, '_blank');
             hideLoading();
@@ -1096,7 +1091,9 @@ function buildSidebar() {
         try {
             const zip = new JSZip();
             zip.file('index.html', getCleanHTML());
-            const blob = await zip.generateAsync({ type: 'blob' });
+            const blob = await zip.generateAsync({
+                type: 'blob'
+            });
             saveAs(blob, PROJECT_NAME + '.zip');
         } catch (e) {
             alert('Erro ao gerar download');
@@ -1106,9 +1103,8 @@ function buildSidebar() {
     };
 
     window.toggleCategory = toggleCategory;
-</script>
+    </script>
 
 </body>
+
 </html>
-
-
