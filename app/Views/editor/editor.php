@@ -505,54 +505,85 @@ else {
             }
         });
     }
-
-    function buildSidebar() {
-        const container = document.getElementById('categories-container');
-        container.innerHTML = '';
-
-        const categories = {};
-
-        // Agrupa elementos com data-edit
-        const allElements = iframeDoc.querySelectorAll('[data-edit]');
-        allElements.forEach(el => {
-            const key = el.dataset.edit;
-            const category = categorizeField(key, el);
-
-            if (!categories[category]) {
-                categories[category] = [];
-            }
-
-            categories[category].push({ key, element: el });
-        });
-
-        // Extrai variáveis CSS
-        extractCSSVariables(categories);
-
-        // Renderiza categorias
-        Object.keys(categories).sort().forEach(categoryKey => {
-            const config = categoryConfigs[categoryKey] || { name: categoryKey };
-            const fields = categories[categoryKey];
-
-            const categoryDiv = document.createElement('div');
-            categoryDiv.className = 'category';
-            categoryDiv.innerHTML = `
-                <div class="category-header" onclick="toggleCategory(this)">
-                    <h6>${config.name} [${fields.length}]</h6>
-                    <div class="collapse-toggle">▼</div>
-                </div>
-                <div class="category-content"></div>
-            `;
-
-            const contentDiv = categoryDiv.querySelector('.category-content');
-
-            fields.forEach(({ key, element, isCSSVar, varName, value }) => {
-                const fieldDiv = createFieldInput(key, element, config.inputType, isCSSVar, varName, value);
-                contentDiv.appendChild(fieldDiv);
-            });
-
-            container.appendChild(categoryDiv);
-        });
+function buildSidebar() {
+    console.log('🧱 Iniciando construção do painel lateral...');
+    
+    const container = document.getElementById('categories-container');
+    if (!container) {
+        console.error('❌ Container categories-container não encontrado!');
+        return;
     }
+    
+    container.innerHTML = '';
+
+    const categories = {};
+
+    // Agrupa elementos com data-edit
+    const allElements = iframeDoc.querySelectorAll('[data-edit]');
+    console.log(`📝 Total de elementos [data-edit]: ${allElements.length}`);
+    
+    if (allElements.length === 0) {
+        container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">⚠️ Nenhum elemento editável encontrado no template</p>';
+        return;
+    }
+    
+    allElements.forEach(el => {
+        const key = el.dataset.edit;
+        const category = categorizeField(key, el);
+
+        if (!categories[category]) {
+            categories[category] = [];
+        }
+
+        categories[category].push({
+            key,
+            element: el
+        });
+    });
+
+    console.log(`📂 Categorias criadas:`, Object.keys(categories));
+
+    // Extrai variáveis CSS
+    extractCSSVariables(categories);
+
+    // Renderiza categorias
+    Object.keys(categories).sort().forEach(categoryKey => {
+        const config = categoryConfigs[categoryKey] || {
+            name: categoryKey
+        };
+        const fields = categories[categoryKey];
+
+        console.log(`  ├─ ${config.name}: ${fields.length} campos`);
+
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category';
+        categoryDiv.innerHTML = `
+            <div class="category-header" onclick="toggleCategory(this)">
+                <h6>${config.name} [${fields.length}]</h6>
+                <div class="collapse-toggle">▼</div>
+            </div>
+            <div class="category-content"></div>
+        `;
+
+        const contentDiv = categoryDiv.querySelector('.category-content');
+
+        fields.forEach(({
+            key,
+            element,
+            isCSSVar,
+            varName,
+            value
+        }) => {
+            const fieldDiv = createFieldInput(key, element, config.inputType, isCSSVar, varName,
+                value);
+            contentDiv.appendChild(fieldDiv);
+        });
+
+        container.appendChild(categoryDiv);
+    });
+    
+    console.log('✅ Painel lateral construído com sucesso');
+}
 
     function createFieldInput(key, element, preferredType, isCSSVar, varName, cssValue) {
         const fieldDiv = document.createElement('div');
