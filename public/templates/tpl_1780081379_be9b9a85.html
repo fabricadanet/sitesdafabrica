@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oficina Mecânica - Serviço de Confiança</title>
+    <meta name="description" content="A sua oficina de confiança para revisões, diagnósticos e reparações automóveis.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            500: '#f59e0b', // Amber 500
+                            600: '#d97706', // Amber 600
+                            900: '#0f172a', // Slate 900
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <header class="bg-brand-900 text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="font-bold text-xl tracking-tight">AutoFix <span class="text-brand-500">Mecânica</span></span>
+                </div>
+                <nav class="hidden md:flex gap-8 font-medium">
+                    <a href="#servicos" class="hover:text-brand-500 transition-colors">Serviços</a>
+                    <a href="#sobre" class="hover:text-brand-500 transition-colors">Sobre Nós</a>
+                    <a href="#testemunhos" class="hover:text-brand-500 transition-colors">Testemunhos</a>
+                </nav>
+                <div>
+                    <a href="#contacto" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-6 rounded-md transition-all shadow-md">
+                        Pedir Orçamento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative bg-brand-900 text-white overflow-hidden">
+        <div class="absolute inset-0">
+            <img src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Mecânico a trabalhar" class="w-full h-full object-cover opacity-20">
+        </div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 flex flex-col md:flex-row items-center">
+            <div class="md:w-2/3 text-center md:text-left">
+                <span class="text-brand-500 font-bold tracking-wider uppercase text-sm mb-2 block">Oficina Multimarca Especializada</span>
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
+                    A sua viatura em <br> mãos de <span class="text-brand-500">Especialistas.</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl">
+                    Diagnósticos precisos, transparência no serviço e peças originais. Deixe a manutenção do seu automóvel com quem garante a sua segurança na estrada.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#contacto" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-8 rounded-md text-lg transition-all shadow-lg text-center">
+                        Agendar Revisão
+                    </a>
+                    <a href="#servicos" class="bg-transparent border border-white hover:bg-white hover:text-brand-900 font-bold py-4 px-8 rounded-md text-lg transition-all text-center">
+                        Ver Serviços
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-white border-b border-gray-200 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div>
+                    <p class="text-3xl font-bold text-brand-900">15+</p>
+                    <p class="text-gray-500 text-sm font-medium">Anos de Experiência</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-brand-900">5000+</p>
+                    <p class="text-gray-500 text-sm font-medium">Viaturas Reparadas</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-brand-900">100%</p>
+                    <p class="text-gray-500 text-sm font-medium">Transparência</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-brand-900">12 Meses</p>
+                    <p class="text-gray-500 text-sm font-medium">Garantia de Serviço</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="servicos" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-brand-900 mb-4">Os Nossos Serviços</h2>
+                <p class="text-gray-600">Oferecemos soluções completas de mecânica e eletrónica para todas as marcas de automóveis, com equipamentos de última geração.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 bg-brand-100 text-brand-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-900 mb-3">Revisão Geral</h3>
+                    <p class="text-gray-600 mb-4">Mudança de óleo, filtros, verificação de fluidos e inspeção completa aos pontos vitais da sua viatura para passar na IPO.</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 bg-brand-100 text-brand-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-900 mb-3">Diagnóstico Eletrónico</h3>
+                    <p class="text-gray-600 mb-4">Leitura de avarias através de máquina de diagnóstico avançada, resolução de luzes de motor e problemas elétricos complexos.</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 bg-brand-100 text-brand-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-900 mb-3">Travões & Suspensão</h3>
+                    <p class="text-gray-600 mb-4">Substituição de pastilhas, discos, amortecedores e verificação do sistema de travagem para a máxima segurança.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobre" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <div class="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Equipa da Oficina" class="rounded-lg shadow-xl">
+                </div>
+                <div class="md:w-1/2">
+                    <h2 class="text-3xl md:text-4xl font-bold text-brand-900 mb-6">Mais do que mecânicos, a nossa equipa é apaixonada por automóveis.</h2>
+                    <p class="text-gray-600 mb-4 text-lg">
+                        Fundada com o princípio de que a honestidade é a melhor ferramenta, a AutoFix tem servido a comunidade local há mais de uma década.
+                    </p>
+                    <p class="text-gray-600 mb-6 text-lg">
+                        O nosso compromisso é simples: não cobramos peças desnecessárias, explicamos sempre o problema com clareza e devolvemos a sua viatura o mais rápido possível, sem comprometer a qualidade da reparação.
+                    </p>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-brand-900 font-medium">
+                            <svg class="w-5 h-5 text-brand-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Orçamentos 100% Transparentes
+                        </li>
+                        <li class="flex items-center text-brand-900 font-medium">
+                            <svg class="w-5 h-5 text-brand-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Mecânicos Certificados
+                        </li>
+                        <li class="flex items-center text-brand-900 font-medium">
+                            <svg class="w-5 h-5 text-brand-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Respeito pelos Prazos de Entrega
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="testemunhos" class="py-20 bg-brand-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">O Que Dizem os Nossos Clientes</h2>
+                <p class="text-gray-400">A sua satisfação é a nossa melhor publicidade.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-slate-800 p-8 rounded-lg border border-slate-700">
+                    <div class="flex text-brand-500 mb-4">
+                        ★★★★★
+                    </div>
+                    <p class="text-gray-300 mb-6 italic">"A luz do motor acendeu antes de uma viagem. O diagnóstico foi rápido e o preço muito justo. Recomendo a 100%, ganharam um cliente para a vida."</p>
+                    <div class="font-bold">João Silva</div>
+                    <div class="text-sm text-gray-400">Dono de um VW Golf</div>
+                </div>
+                <div class="bg-slate-800 p-8 rounded-lg border border-slate-700">
+                    <div class="flex text-brand-500 mb-4">
+                        ★★★★★
+                    </div>
+                    <p class="text-gray-300 mb-6 italic">"Fiz a revisão completa aqui. Mostraram-me as peças velhas substituídas e explicaram-me tudo o que fizeram. Nunca vi tanta transparência."</p>
+                    <div class="font-bold">Marta Pereira</div>
+                    <div class="text-sm text-gray-400">Dona de um Renault Clio</div>
+                </div>
+                <div class="bg-slate-800 p-8 rounded-lg border border-slate-700">
+                    <div class="flex text-brand-500 mb-4">
+                        ★★★★★
+                    </div>
+                    <p class="text-gray-300 mb-6 italic">"O carro estava a fazer um barulho estranho nos travões. Resolveram o problema na mesma manhã. Equipa muito simpática e profissional."</p>
+                    <div class="font-bold">Rui Costa</div>
+                    <div class="text-sm text-gray-400">Dono de um BMW Série 3</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contacto" class="bg-gray-50 pt-20 pb-10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center border-t-4 border-brand-500 mb-16">
+                <h2 class="text-3xl font-bold text-brand-900 mb-4">Precisa de Manutenção na sua Viatura?</h2>
+                <p class="text-gray-600 mb-8 text-lg">Ligue-nos agora para agendar a sua visita ou venha ter connosco diretamente à oficina.</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="tel:+351912345678" class="bg-brand-900 hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-md transition-all flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        Ligar: 912 345 678
+                    </a>
+                    <a href="https://wa.me/351912345678" target="_blank" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-md transition-all flex items-center justify-center">
+                        Mensagem WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-200 pt-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-center md:text-left">
+                <div>
+                    <span class="font-bold text-xl tracking-tight block mb-4 text-brand-900">AutoFix <span class="text-brand-500">Mecânica</span></span>
+                    <p class="text-gray-500 text-sm">A qualidade que o seu carro merece, com a confiança que procura.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-brand-900 mb-4 uppercase text-sm tracking-wider">Horário</h4>
+                    <p class="text-gray-500 text-sm mb-1">Seg - Sex: 08:30 às 18:30</p>
+                    <p class="text-gray-500 text-sm mb-1">Sábado: 09:00 às 13:00</p>
+                    <p class="text-gray-500 text-sm font-bold mt-2">Urgências 24h Disponíveis</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-brand-900 mb-4 uppercase text-sm tracking-wider">Morada</h4>
+                    <p class="text-gray-500 text-sm mb-1">Rua da Indústria, Armazém 4</p>
+                    <p class="text-gray-500 text-sm">4000-123 Porto, Portugal</p>
+                </div>
+            </div>
+            <div class="text-center text-sm text-gray-400 pb-8">
+                &copy; 2026 AutoFix Mecânica. Criado com Sites da Fábrica.
+            </div>
+        </footer>
+    </section>
+
+</body>
+</html>

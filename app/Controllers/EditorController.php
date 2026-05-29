@@ -42,8 +42,38 @@ class EditorController {
             // Prioridade: HTML salvo > HTML do template
             if (!empty($project['html_content'])) {
                 $templateHtml = $project['html_content'];
+                
+                // Se o HTML salvo não tiver a tag <head> mas tivermos o arquivo do template original, recuperamos o <head> original
+                if (!preg_match('/<head[^>]*>/i', $templateHtml) && !empty($project['html_file'])) {
+                    $file = $_SERVER['DOCUMENT_ROOT'] . "/templates/{$project['html_file']}";
+                    if (!file_exists($file)) {
+                        $file = __DIR__ . "/../../public/templates/{$project['html_file']}";
+                    }
+                    
+                    if (file_exists($file)) {
+                        $origContent = file_get_contents($file);
+                        if (preg_match('/(<head[^>]*>.*?<\/head>)/is', $origContent, $matches)) {
+                            $headBlock = $matches[1];
+                            
+                            $htmlAttr = '';
+                            if (preg_match('/<html([^>]*)>/i', $origContent, $m)) {
+                                $htmlAttr = $m[1];
+                            }
+                            $bodyAttr = '';
+                            if (preg_match('/<body([^>]*)>/i', $origContent, $m)) {
+                                $bodyAttr = $m[1];
+                            }
+                            
+                            // Reconstruir o documento completo mantendo o head e os atributos do original
+                            $templateHtml = "<!DOCTYPE html>\n<html" . $htmlAttr . ">\n" . $headBlock . "\n<body" . $bodyAttr . ">\n" . $templateHtml . "\n</body>\n</html>";
+                        }
+                    }
+                }
             } elseif (!empty($project['html_file'])) {
                 $file = $_SERVER['DOCUMENT_ROOT'] . "/templates/{$project['html_file']}";
+                if (!file_exists($file)) {
+                    $file = __DIR__ . "/../../public/templates/{$project['html_file']}";
+                }
                 if (file_exists($file)) {
                     $templateHtml = file_get_contents($file);
                 }

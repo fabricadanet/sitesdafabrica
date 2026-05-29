@@ -129,8 +129,52 @@ function buildStaticHtml($project)
     // Remove qualquer barra final para evitar caminhos duplicados (ex: //uploads)
     $appUrl = rtrim($appUrl, '/');
 
+    // Se o HTML salvo já for um documento completo (contém a tag <head>), atualizamos as tags de SEO e caminhos direto nele
+    if (preg_match('/<head[^>]*>/i', $content)) {
+        // Tratar caminhos absolutos das imagens
+        $content = str_replace('src="/uploads/', 'src="' . $appUrl . '/uploads/', $content);
+        $content = str_replace("src='/uploads/", "src='" . $appUrl . "/uploads/", $content);
+        $content = str_replace('url("/uploads/', 'url("' . $appUrl . '/uploads/', $content);
+        $content = str_replace("url('/uploads/", "url('" . $appUrl . "/uploads/", $content);
+        $content = str_replace('url(&quot;/uploads/', 'url(&quot;' . $appUrl . '/uploads/', $content);
+        $content = str_replace('url(&#039;/uploads/', 'url(&#039;' . $appUrl . '/uploads/', $content);
+
+        // Atualizar ou injetar Title no <head>
+        if (preg_match('/<title>(.*?)<\/title>/i', $content)) {
+            $content = preg_replace('/<title>(.*?)<\/title>/i', "<title>{$title}</title>", $content);
+        } else {
+            $content = preg_replace('/<\/head>/i', "    <title>{$title}</title>\n</head>", $content);
+        }
+
+        // Atualizar ou injetar Meta Description no <head>
+        if (preg_match('/<meta[^>]*name="description"[^>]*>/i', $content)) {
+            $content = preg_replace('/<meta[^>]*name="description"[^>]*>/i', "<meta name=\"description\" content=\"{$description}\">", $content);
+        } else {
+            $content = preg_replace('/<\/head>/i', "    <meta name=\"description\" content=\"{$description}\">\n</head>", $content);
+        }
+
+        // Injetar OG Image se definida
+        if (!empty($seoImage)) {
+            // Remove og:image e twitter:image antigos se existirem
+            $content = preg_replace('/<meta[^>]*property="og:image"[^>]*>/i', '', $content);
+            $content = preg_replace('/<meta[^>]*name="twitter:image"[^>]*>/i', '', $content);
+            
+            $imageUrl = htmlspecialchars($seoImage, ENT_QUOTES, 'UTF-8');
+            if (strpos($imageUrl, 'http') !== 0) {
+                $imageUrl = $appUrl . $imageUrl;
+            }
+            $ogTags = "<meta property=\"og:image\" content=\"{$imageUrl}\">\n    <meta name=\"twitter:image\" content=\"{$imageUrl}\">";
+            $content = preg_replace('/<\/head>/i', "    {$ogTags}\n</head>", $content);
+
+            // Remover qualquer imagem de capa ou thumbnail do template original se necessário
+            $content = preg_replace('/<img[^>]*src="[^"\\]*\/template_assets\/[^"\\]*"[^>]*>/i', '', $content);
+        }
+
+        return $content;
+    }
+
+    // Fallback: se for um fragmento de body antigo, envelopamos no layout completo do SaaS
     // 🔥 CORREÇÃO CRÍTICA: Transforma caminhos relativos de imagens em URLs absolutas fixas
-    // Funciona para tags <img> e propriedades CSS url() comuns em builders visuais
     $content = str_replace('src="/uploads/', 'src="' . $appUrl . '/uploads/', $content);
     $content = str_replace("src='/uploads/", "src='" . $appUrl . "/uploads/", $content);
     $content = str_replace('url("/uploads/', 'url("' . $appUrl . '/uploads/', $content);

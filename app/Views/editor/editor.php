@@ -80,6 +80,13 @@ else {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>">
     <title>Editor Inteligente - Sites da Fábrica</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
     <!-- CSS do Sistema de Feedback -->
     <link rel="stylesheet" href="/assets/css/editor-feedback.css">
     <script src="/assets/js/editor-feedback.js" defer></script>
@@ -931,6 +938,32 @@ else {
     });
 
     function injectEditorTools(doc) {
+        // Garantir que o Tailwind CDN esteja injetado no iframe para renderização em tempo real das classes
+        if (!doc.querySelector('script[src*="tailwindcss.com"]')) {
+            const tailwindScript = doc.createElement('script');
+            tailwindScript.src = "https://cdn.tailwindcss.com";
+            doc.head.appendChild(tailwindScript);
+        }
+
+        // Garantir que as fontes do Google estejam injetadas no iframe
+        if (!doc.querySelector('link[href*="fonts.googleapis.com"]')) {
+            const preconnect1 = doc.createElement('link');
+            preconnect1.rel = "preconnect";
+            preconnect1.href = "https://fonts.googleapis.com";
+            doc.head.appendChild(preconnect1);
+
+            const preconnect2 = doc.createElement('link');
+            preconnect2.rel = "preconnect";
+            preconnect2.href = "https://fonts.gstatic.com";
+            preconnect2.crossOrigin = "anonymous";
+            doc.head.appendChild(preconnect2);
+
+            const fontsLink = doc.createElement('link');
+            fontsLink.rel = "stylesheet";
+            fontsLink.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700&family=Poppins:wght@600;700;800&display=swap";
+            doc.head.appendChild(fontsLink);
+        }
+
         // 1. Inject CSS for Toolbar and Selection
         const style = doc.createElement('style');
         style.id = 'sf-editor-style';
@@ -1232,16 +1265,31 @@ else {
 
 
     function tryBuildSidebar(attempt) {
-        if (attempt > 10) {
+        if (attempt > 30) {
+            // Se demorar muito (3 segundos), força a inicialização com o que tiver no DOM
+            if (iframeDoc && iframeDoc.body) {
+                try {
+                    buildSidebar();
+                } catch (e) {
+                    console.error("Erro ao forçar a inicialização do editor:", e);
+                }
+            }
             hideLoading();
             return;
         }
-        if (iframeDoc.body && iframeDoc.querySelector('style')) {
-            buildSidebar();
+        
+        // Verifica se o iframe e seu body estão acessíveis e prontos (complete ou interactive)
+        if (iframeDoc && iframeDoc.body && (iframeDoc.readyState === 'complete' || iframeDoc.readyState === 'interactive')) {
+            try {
+                buildSidebar();
+            } catch (e) {
+                console.error("Erro ao inicializar sidebar do editor:", e);
+            }
             hideLoading();
             return;
         }
-        setTimeout(() => tryBuildSidebar(attempt + 1), 150);
+        
+        setTimeout(() => tryBuildSidebar(attempt + 1), 100);
     }
 
     function showLoading(msg = 'Carregando...') {

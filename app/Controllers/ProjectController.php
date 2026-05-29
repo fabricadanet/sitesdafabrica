@@ -48,36 +48,90 @@ public function save()
         echo json_encode(['success' => false, 'message' => 'Sessão inválida ou expirada (CSRF). Recarregue a página.']);
         return;
     }
-    if (!empty($html)) {
-        $config = (new HtmlSanitizerConfig())
-            ->allowSafeElements() // Permite elementos básicos de texto seguros
-            // Permite as tags estruturais com seus atributos essenciais para o Tailwind/Construtor
-            ->allowElement('div', ['class', 'id', 'style'])
-            ->allowElement('span', ['class', 'id', 'style'])
-            ->allowElement('section', ['class', 'id', 'style'])
-            ->allowElement('header', ['class', 'id', 'style'])
-            ->allowElement('footer', ['class', 'id', 'style'])
-            ->allowElement('nav', ['class', 'id', 'style'])
-            ->allowElement('button', ['class', 'type', 'style'])
-            ->allowElement('img', ['src', 'alt', 'class', 'style'])
-            ->allowElement('a', ['href', 'target', 'class', 'style'])
-            // Permite SVGs (comum em templates e ícones)
-            ->allowElement('svg', ['class', 'viewBox', 'fill', 'xmlns'])
-            ->allowElement('path', ['d', 'fill', 'stroke'])
-            // Libera os atributos class e style globalmente para as tags permitidas acima
-            ->allowAttribute('class', '*')
-            ->allowAttribute('style', '*');
-
-        $sanitizer = new HtmlSanitizer($config);
-        $html = $sanitizer->sanitize($html);
-    }
-
     $userId = $_SESSION['user_id'];
     $id = $_POST['id'] ?? null;
     $name = trim($_POST['name'] ?? 'Sem Título');
     $html = $_POST['html'] ?? '';
     $templateId = $_POST['template_id'] ?? null;
     $loadTemplateContent = $_POST['load_template_content'] ?? false;
+
+    if (!empty($html)) {
+        $htmlAttributes = '';
+        $headBlock = '';
+        $bodyAttributes = '';
+        $bodyContent = $html;
+        $isFullDocument = false;
+
+        // Check if there is a <body> tag to determine if it is a full HTML document
+        if (preg_match('/<body[^>]*>/i', $html)) {
+            $isFullDocument = true;
+
+            // 1. Extract <html> attributes
+            if (preg_match('/<html([^>]*)>/i', $html, $matches)) {
+                $htmlAttributes = $matches[1];
+            }
+
+            // 2. Extract <head> block
+            if (preg_match('/(<head[^>]*>.*?<\/head>)/is', $html, $matches)) {
+                $headBlock = $matches[1];
+            }
+
+            // 3. Extract <body> attributes
+            if (preg_match('/<body([^>]*)>/i', $html, $matches)) {
+                $bodyAttributes = $matches[1];
+            }
+
+            // 4. Extract <body> inner content
+            if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
+                $bodyContent = $matches[1];
+            }
+        }
+
+        // Extrair e preservar as tags <style> antes da sanitização (dentro do conteúdo do body)
+        $styleTags = [];
+        $bodyContent = preg_replace_callback('/(<style[^>]*>.*?<\/style>)/is', function ($matches) use (&$styleTags) {
+            $placeholder = '<!-- STYLE_PLACEHOLDER_' . count($styleTags) . ' -->';
+            $styleTags[] = $matches[1];
+            return $placeholder;
+        }, $bodyContent);
+
+        $config = (new HtmlSanitizerConfig())
+            ->allowSafeElements() // Permite elementos básicos de texto seguros
+            // Permite as tags estruturais com seus atributos essenciais para o Tailwind/Construtor
+            ->allowElement('div', ['class', 'id', 'style', 'data-edit'])
+            ->allowElement('span', ['class', 'id', 'style', 'data-edit'])
+            ->allowElement('section', ['class', 'id', 'style', 'data-edit'])
+            ->allowElement('header', ['class', 'id', 'style', 'data-edit'])
+            ->allowElement('footer', ['class', 'id', 'style', 'data-edit'])
+            ->allowElement('nav', ['class', 'id', 'style', 'data-edit'])
+            ->allowElement('button', ['class', 'type', 'style', 'data-edit'])
+            ->allowElement('img', ['src', 'alt', 'class', 'style', 'data-edit'])
+            ->allowElement('a', ['href', 'target', 'class', 'style', 'data-edit'])
+            ->allowElement('style', ['type']) // Adiciona a permissão da tag <style> no sanitizador
+            // Permite SVGs (comum em templates e ícones)
+            ->allowElement('svg', ['class', 'viewBox', 'fill', 'xmlns'])
+            ->allowElement('path', ['d', 'fill', 'stroke'])
+            // Libera os atributos class, style e data-edit globalmente para as tags permitidas acima
+            ->allowAttribute('class', '*')
+            ->allowAttribute('style', '*')
+            ->allowAttribute('data-edit', '*');
+
+        $sanitizer = new HtmlSanitizer($config);
+        $bodyContent = $sanitizer->sanitize($bodyContent);
+
+        // Reinserir as tags <style> originais de volta ao HTML sanitizado
+        foreach ($styleTags as $index => $originalStyle) {
+            $placeholder = '<!-- STYLE_PLACEHOLDER_' . $index . ' -->';
+            $bodyContent = str_replace($placeholder, $originalStyle, $bodyContent);
+        }
+
+        // Reconstruir o HTML completo
+        if ($isFullDocument) {
+            $html = "<!DOCTYPE html>\n<html" . $htmlAttributes . ">\n" . $headBlock . "\n<body" . $bodyAttributes . ">\n" . $bodyContent . "\n</body>\n</html>";
+        } else {
+            $html = $bodyContent;
+        }
+    }
 
     // Novos campos SEO
     $seoTitle = trim($_POST['seo_title'] ?? '');

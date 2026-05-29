@@ -124,6 +124,36 @@ private function buildExportHtml($project, $content, $localSeoImage)
         $title = htmlspecialchars($seoTitle ?: $projectName, ENT_QUOTES, 'UTF-8');
         $description = htmlspecialchars($seoDescription ?: 'Site gerado pela plataforma', ENT_QUOTES, 'UTF-8');
         
+        // Se o HTML salvo já for um documento completo (contém a tag <head>), atualizamos as tags de SEO direto nele
+        if (preg_match('/<head[^>]*>/i', $content)) {
+            // Atualizar ou injetar Title no <head>
+            if (preg_match('/<title>(.*?)<\/title>/i', $content)) {
+                $content = preg_replace('/<title>(.*?)<\/title>/i', "<title>{$title}</title>", $content);
+            } else {
+                $content = preg_replace('/<\/head>/i', "    <title>{$title}</title>\n</head>", $content);
+            }
+
+            // Atualizar ou injetar Meta Description no <head>
+            if (preg_match('/<meta[^>]*name="description"[^>]*>/i', $content)) {
+                $content = preg_replace('/<meta[^>]*name="description"[^>]*>/i', "<meta name=\"description\" content=\"{$description}\">", $content);
+            } else {
+                $content = preg_replace('/<\/head>/i', "    <meta name=\"description\" content=\"{$description}\">\n</head>", $content);
+            }
+
+            // Injetar OG Image se definida
+            if (!empty($localSeoImage)) {
+                // Remove og:image e twitter:image antigos se existirem
+                $content = preg_replace('/<meta[^>]*property="og:image"[^>]*>/i', '', $content);
+                $content = preg_replace('/<meta[^>]*name="twitter:image"[^>]*>/i', '', $content);
+                
+                $safeImage = htmlspecialchars($localSeoImage, ENT_QUOTES, 'UTF-8');
+                $ogTags = "<meta property=\"og:image\" content=\"{$safeImage}\">\n    <meta name=\"twitter:image\" content=\"{$safeImage}\">";
+                $content = preg_replace('/<\/head>/i', "    {$ogTags}\n</head>", $content);
+            }
+
+            return $content;
+        }
+
         $ogImageTag = '';
         if (!empty($localSeoImage)) {
             $safeImage = htmlspecialchars($localSeoImage, ENT_QUOTES, 'UTF-8');

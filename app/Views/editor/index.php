@@ -4,6 +4,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>">
 <title>Editor — Sites da Fábrica</title>
 <link rel="stylesheet" href="/assets/css/editor.css">
 </head>
@@ -45,6 +46,6 @@
 </main>
 
 <script src="/assets/js/editor.js"></script>
-<meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?>">
+
 </body>
 </html>
