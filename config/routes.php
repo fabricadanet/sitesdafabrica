@@ -86,6 +86,24 @@ switch ($cleanUri) {
             echo json_encode(['success' => false, 'message' => 'Método inválido']);
         }
         break;
+    // 📦 EXPORTAÇÃO DE SITES
+    case '/projects/export':
+        if ($method === 'GET') {
+            require_once __DIR__ . '/../app/Controllers/DownloadController.php';
+            (new \App\Controllers\DownloadController)->exportProject();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Use o método GET']);
+        }
+        break;
+
+    case '/projects/preview':
+        (new ProjectController)->preview();
+        break;
+
+    case '/projects/download':
+        (new ProjectController)->download();
+        break;
 
     case '/projects/user-data':
         header('Content-Type: application/json');
@@ -270,6 +288,24 @@ switch ($cleanUri) {
             (new AdminController)->subscriptionCancel();
         }
         break;
+    // 🕵️ IMPERSONATION (Fazer login como cliente)
+    case '/admin/user/impersonate':
+        if ($method === 'GET') {
+            (new AdminController)->impersonate();
+        }
+        break;
+
+    case '/admin/user/stop-impersonating':
+        if ($method === 'GET') {
+            (new AdminController)->stopImpersonating();
+        }
+        break;
+    case '/admin/template/upload-zip':
+        if ($method === 'POST') {
+            header('Content-Type: application/json');
+            (new AdminController)->templateUploadZip();
+        }
+        break;
 
     // 🚀 ROTAS DE DEPLOY 
     case '/deploy/publish':
@@ -349,7 +385,17 @@ switch ($cleanUri) {
             echo json_encode(['success' => false, 'message' => 'Método inválido. Use POST']);
         }
         break;
-    
+    // 🖼️ UPLOADS
+    case '/upload/image':
+    case '/api/upload/image':
+        if ($method === 'POST') {
+            require_once __DIR__ . '/../app/Controllers/UploadController.php';
+            (new \App\Controllers\UploadController)->uploadImage();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método inválido']);
+        }
+        break; 
     default:
         http_response_code(404);
         header('Content-Type: application/json');

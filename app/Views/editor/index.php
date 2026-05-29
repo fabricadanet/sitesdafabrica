@@ -45,5 +45,6 @@
 </main>
 
 <script src="/assets/js/editor.js"></script>
+<meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?>">
 </body>
 </html>

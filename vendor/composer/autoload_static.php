@@ -7,14 +7,40 @@ namespace Composer\Autoload;
 class ComposerStaticInit033c808ef3340842bb3f0fd94ae1e704
 {
     public static $prefixLengthsPsr4 = array (
-        'A' => 
+        'S' =>
+        array (
+            'Symfony\\Component\\HtmlSanitizer\\' => 32,
+        ),
+        'P' =>
+        array (
+            'Psr\\Http\\Message\\' => 17,
+        ),
+        'L' =>
+        array (
+            'League\\Uri\\' => 11,
+        ),
+        'A' =>
         array (
             'App\\' => 4,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'App\\' => 
+        'Symfony\\Component\\HtmlSanitizer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/html-sanitizer',
+        ),
+        'Psr\\Http\\Message\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'League\\Uri\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/uri',
+            1 => __DIR__ . '/..' . '/league/uri-interfaces',
+        ),
+        'App\\' =>
         array (
             0 => __DIR__ . '/../..' . '/app',
         ),

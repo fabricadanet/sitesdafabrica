@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../helpers/subscription.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>">
     <title>Meus Projetos — Sites da Fábrica</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -391,6 +392,16 @@ require_once __DIR__ . '/../../helpers/subscription.php';
 
         .btn-delete:hover {
             background: #ffcdd2;
+        }
+
+        .btn-export {
+            background: #e6fffa;
+            color: #008080;
+        }
+
+        .btn-export:hover {
+            background: #b2f5ea;
+            color: #004d4d;
         }
 
         .empty-state {
@@ -910,6 +921,13 @@ require_once __DIR__ . '/../../helpers/subscription.php';
 
 <body>
 
+<?php if (isset($_SESSION['admin_id'])): ?>
+    <div style="background-color: #ef4444; color: #ffffff; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; position: sticky; top: 0; z-index: 9999; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%;">
+        🕵️ A aceder como utilizador [ID: <?= htmlspecialchars($_SESSION['user_id']) ?>]. 
+        <a href="/admin/user/stop-impersonating" style="color: #ffffff; text-decoration: underline; margin-left: 10px; font-weight: 700;">Clique aqui para Voltar ao Admin →</a>
+    </div>
+<?php endif; ?>
+
 <div class="container-main">
 
     <!-- ===== HEADER ===== -->
@@ -1097,6 +1115,11 @@ require_once __DIR__ . '/../../helpers/subscription.php';
                                         <i class="fas fa-rocket"></i> Publicar
                                     </button>
                                 <?php endif; ?>
+
+                                <a href="/projects/export?id=<?= $project['id'] ?>"
+                                   class="btn-action btn-export">
+                                    <i class="fas fa-cloud-download-alt"></i> Exportar
+                                </a>
 
                                 <button class="btn-action btn-delete"
                                         onclick="deleteProject(<?= $project['id'] ?>)">
@@ -1418,12 +1441,14 @@ require_once __DIR__ . '/../../helpers/subscription.php';
     }
 
     function selectTemplate(templateId, templateName) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         fetch('/api/projects/save', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': csrfToken
             },
-            body: 'name=' + encodeURIComponent(currentProjectName) + '&template_id=' + templateId + '&load_template_content=1'
+            body: 'name=' + encodeURIComponent(currentProjectName) + '&template_id=' + templateId + '&load_template_content=1&csrf_token=' + encodeURIComponent(csrfToken)
         })
             .then(response => response.json())
             .then(data => {

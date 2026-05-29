@@ -17,6 +17,7 @@ $projectData  = null;
 if ($projectId) {
     $stmt = $this->pdo->prepare("
         SELECT p.id, p.name, p.html_content, p.template_id, p.user_id,
+               p.seo_title, p.seo_description, p.seo_image,
                t.html_file, t.name AS template_name
         FROM projects p
         LEFT JOIN templates_library t ON t.id = p.template_id
@@ -77,6 +78,7 @@ else {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>">
     <title>Editor Inteligente - Sites da Fábrica</title>
     <!-- CSS do Sistema de Feedback -->
     <link rel="stylesheet" href="/assets/css/editor-feedback.css">
@@ -383,6 +385,115 @@ else {
             transform: rotate(360deg);
         }
     }
+
+    /* ===== MODAL CONFIGURAÇÕES DE SEO ===== */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header .modal-title {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1.125rem;
+        margin: 0;
+    }
+
+    .close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .close:hover {
+        color: #374151;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-help {
+        color: #6b7280;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .modal-footer {
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        padding: 1rem 1.25rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
     </style>
 </head>
 
@@ -391,6 +502,7 @@ else {
     <header>
         <div class="brand">⚡ Sites da Fábrica — Editor Inteligente</div>
         <div class="actions">
+            <button id="seoSettings" class="btn" style="background:#8b5cf6;"><i class="fas fa-cog"></i> Configurações de SEO</button>
             <button id="saveProject" class="btn">💾 Salvar</button>
             <button id="downloadSite" class="btn">⬇️ Baixar</button>
             <button id="preview" class="btn">👁️ Preview</button>
@@ -419,6 +531,46 @@ else {
         <p style="margin-top: 1rem; color: #374151; font-weight: 500;">Carregando...</p>
     </div>
 
+    <!-- ===== MODAL CONFIGURAÇÕES DE SEO ===== -->
+    <div id="seoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚙️ Configurações de SEO</h5>
+                <button type="button" class="close" onclick="closeSeoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="seoTitle">Título do Site (Google e WhatsApp)</label>
+                    <input type="text" id="seoTitle" placeholder="Ex: Meu Negócio Local - Serviços Rápidos" value="<?= htmlspecialchars($projectData['seo_title'] ?? '') ?>">
+                    <div class="form-help">Título que será exibido no Google e na partilha de links.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="seoDescription">Descrição do Site</label>
+                    <textarea id="seoDescription" placeholder="Ex: Prestamos serviços rápidos de alta qualidade na sua região. Entre em contacto agora!" rows="3"><?= htmlspecialchars($projectData['seo_description'] ?? '') ?></textarea>
+                    <div class="form-help">Pequena descrição que aparece abaixo do título nos resultados do Google.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Imagem de Partilha (OG Image)</label>
+                    <div id="seoImagePreview" class="image-preview" style="height: 140px; margin-bottom: 10px; border: 1px dashed #d1d5db; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f9fafb;">
+                        <?php if (!empty($projectData['seo_image'])): ?>
+                            <img src="<?= htmlspecialchars($projectData['seo_image']) ?>" alt="SEO Preview" style="max-width: 100%; max-height: 100%; object-fit: cover;">
+                        <?php else: ?>
+                            <span style="color: #9ca3af; font-size: 0.875rem;">Nenhuma imagem enviada</span>
+                        <?php endif; ?>
+                    </div>
+                    <input type="hidden" id="seoImageUrl" value="<?= htmlspecialchars($projectData['seo_image'] ?? '') ?>">
+                    <input type="file" id="seoImageFile" accept="image/*" class="field-input" style="padding: 6px;">
+                    <div class="form-help">Imagem recomendada (1200x630px) para aparecer nas partilhas do WhatsApp/Facebook.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeSeoModal()" style="background:#9ca3af; color:white;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     const PROJECT_ID = <?= json_encode($projectId) ?>;
     const TEMPLATE_ID = <?= json_encode($templateId) ?>;
@@ -427,6 +579,51 @@ else {
 
     const iframe = document.getElementById("editorFrame");
     let iframeDoc = null;
+
+    // Função utilitária para fazer upload de imagens ao servidor convertendo em WebP
+    async function uploadImageFile(file, successCallback) {
+        if (typeof showLoading === 'function') {
+            showLoading('Enviando e convertendo imagem...');
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        try {
+            const response = await fetch('/api/upload/image', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.url) {
+                successCallback(data.url);
+                
+                if (typeof buildSidebar === 'function') {
+                    buildSidebar();
+                }
+                if (typeof saveDraft === 'function') {
+                    saveDraft();
+                }
+                alert('✅ Imagem enviada com sucesso!');
+            } else {
+                alert('❌ Erro no upload: ' + (data.message || 'Erro desconhecido'));
+            }
+        } catch (err) {
+            console.error('Erro de upload:', err);
+            alert('❌ Ocorreu um erro ao enviar a imagem.');
+        } finally {
+            if (typeof hideLoading === 'function') {
+                hideLoading();
+            }
+        }
+    }
 
     // Categorias e padrões
     const categoryConfigs = {
@@ -629,12 +826,10 @@ else {
             fileInput.onchange = e => {
                 const file = e.target.files[0];
                 if (!file) return;
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    element.src = ev.target.result;
-                    preview.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
-                };
-                reader.readAsDataURL(file);
+                uploadImageFile(file, (url) => {
+                    element.src = url;
+                    preview.innerHTML = `<img src="${url}" alt="preview">`;
+                });
             };
 
             fieldDiv.appendChild(preview);
@@ -837,6 +1032,18 @@ else {
             // Ignore clicks on the toolbar itself
             if (target.closest('#sf-editor-toolbar')) return;
 
+            // Verificar se o clique foi numa imagem (tag IMG ou elemento com background-image)
+            const computedStyle = doc.defaultView ? doc.defaultView.getComputedStyle(target) : window.getComputedStyle(target);
+            const hasBgImage = computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none';
+            const isImg = target.tagName === 'IMG';
+
+            if (isImg || hasBgImage) {
+                e.preventDefault();
+                e.stopPropagation();
+                triggerImageUpload(target);
+                return;
+            }
+
             // Check if element is editable (text tags or data-edit)
             const isText = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'SPAN', 'A', 'LI', 'TD', 'DIV', 'BUTTON']
                 .includes(target.tagName);
@@ -997,6 +1204,30 @@ else {
         window.addEventListener('resize', () => {
             if (activeElement) updateToolbarPosition(activeElement);
         });
+
+        // Abre o seletor de arquivos e dispara o upload
+        function triggerImageUpload(element) {
+            const fileInput = doc.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+
+            fileInput.onchange = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                uploadImageFile(file, (url) => {
+                    if (element.tagName === 'IMG') {
+                        element.src = url;
+                    } else {
+                        element.style.backgroundImage = "url('" + url + "')";
+                    }
+                });
+            };
+
+            doc.body.appendChild(fileInput);
+            fileInput.click();
+            fileInput.remove();
+        }
     }
 
 
@@ -1040,21 +1271,41 @@ else {
         return clone.outerHTML;
     }
 
-    document.getElementById('saveProject').onclick = async () => {
-        showLoading('Salvando projeto...');
-        const html = getCleanHTML();
+    // Helper para construir FormData com todos os campos (incluindo SEO)
+    function buildProjectFormData(html) {
         const form = new FormData();
         form.append('id', PROJECT_ID || '');
         form.append('name', PROJECT_NAME);
         form.append('html', html);
-
+        
         if (TEMPLATE_ID) {
             form.append('template_id', TEMPLATE_ID);
         }
 
+        // Novos campos SEO
+        const seoTitle = document.getElementById('seoTitle') ? document.getElementById('seoTitle').value : '';
+        const seoDescription = document.getElementById('seoDescription') ? document.getElementById('seoDescription').value : '';
+        const seoImage = document.getElementById('seoImageUrl') ? document.getElementById('seoImageUrl').value : '';
+
+        form.append('seo_title', seoTitle);
+        form.append('seo_description', seoDescription);
+        form.append('seo_image', seoImage);
+
+        return form;
+    }
+
+    document.getElementById('saveProject').onclick = async () => {
+        showLoading('Salvando projeto...');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const html = getCleanHTML();
+        const form = buildProjectFormData(html);
+
         try {
             const res = await fetch('/projects/save', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 body: form
             });
             const data = await res.json();
@@ -1065,7 +1316,7 @@ else {
                     window.location.href = '/editor?id=' + data.project_id;
                 }
             } else {
-                alert('Erro ao salvar o projeto');
+                alert('Erro ao salvar o projeto: ' + (data.message || 'Erro desconhecido'));
             }
         } catch (e) {
             alert('Erro de conexão ao salvar');
@@ -1074,31 +1325,91 @@ else {
         }
     };
 
-    document.getElementById('preview').onclick = () => {
-        showLoading('Gerando preview...');
-        setTimeout(() => {
-            const blob = new Blob([getCleanHTML()], {
-                type: 'text/html'
+    document.getElementById('preview').onclick = async () => {
+        if (!PROJECT_ID) {
+            alert('Por favor, salve o projeto pela primeira vez antes de visualizar.');
+            return;
+        }
+
+        showLoading('Salvando e preparando preview...');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const html = getCleanHTML();
+        const form = buildProjectFormData(html);
+
+        try {
+            await fetch('/projects/save', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: form
             });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
+            window.open('/projects/preview?id=' + PROJECT_ID, '_blank');
+        } catch (e) {
+            console.error('Falha ao auto-salvar antes de preview:', e);
+            window.open('/projects/preview?id=' + PROJECT_ID, '_blank');
+        } finally {
             hideLoading();
-        }, 500);
+        }
     };
 
     document.getElementById('downloadSite').onclick = async () => {
-        showLoading('Gerando arquivo ZIP...');
+        if (!PROJECT_ID) {
+            alert('Por favor, salve o projeto pela primeira vez antes de baixar.');
+            return;
+        }
+
+        showLoading('Salvando e preparando download...');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const html = getCleanHTML();
+        const form = buildProjectFormData(html);
+
         try {
-            const zip = new JSZip();
-            zip.file('index.html', getCleanHTML());
-            const blob = await zip.generateAsync({
-                type: 'blob'
+            await fetch('/projects/save', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: form
             });
-            saveAs(blob, PROJECT_NAME + '.zip');
+            window.location.href = '/projects/download?id=' + PROJECT_ID;
         } catch (e) {
-            alert('Erro ao gerar download');
+            console.error('Falha ao auto-salvar antes de baixar:', e);
+            window.location.href = '/projects/download?id=' + PROJECT_ID;
         } finally {
             hideLoading();
+        }
+    };
+
+    // ===== SEO MODAL FUNCTIONS =====
+    function openSeoModal() {
+        document.getElementById('seoModal').style.display = 'flex';
+    }
+
+    function closeSeoModal() {
+        document.getElementById('seoModal').style.display = 'none';
+    }
+
+    document.getElementById('seoSettings').onclick = openSeoModal;
+
+    // Fechar ao clicar fora do modal
+    window.addEventListener('click', (e) => {
+        const seoModal = document.getElementById('seoModal');
+        if (e.target === seoModal) {
+            closeSeoModal();
+        }
+    });
+
+    // Upload de Imagem de Compartilhamento (SEO)
+    document.getElementById('seoImageFile').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (typeof uploadImageFile === 'function') {
+            uploadImageFile(file, (url) => {
+                document.getElementById('seoImageUrl').value = url;
+                document.getElementById('seoImagePreview').innerHTML = `<img src="${url}" alt="SEO Preview" style="max-width: 100%; max-height: 100%; object-fit: cover;">`;
+            });
         }
     };
 

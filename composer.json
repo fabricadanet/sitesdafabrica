@@ -13,7 +13,8 @@
         }
     ],
     "require": {
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "symfony/html-sanitizer": "^8.1"
     },
     "scripts": {
         "dev": "php -S 0.0.0.0:8000 -t public",

@@ -3,6 +3,9 @@
 // Adicione/Atualize estes métodos no seu controller
 
 namespace App\Controllers;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+
 
 class ProjectController
 {
@@ -36,6 +39,38 @@ public function save()
         echo json_encode(['success' => false]);
         return;
     }
+    header('Content-Type: application/json');
+
+    // 1. Validação do Token CSRF
+    $clientToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], $clientToken)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Sessão inválida ou expirada (CSRF). Recarregue a página.']);
+        return;
+    }
+    if (!empty($html)) {
+        $config = (new HtmlSanitizerConfig())
+            ->allowSafeElements() // Permite elementos básicos de texto seguros
+            // Permite as tags estruturais com seus atributos essenciais para o Tailwind/Construtor
+            ->allowElement('div', ['class', 'id', 'style'])
+            ->allowElement('span', ['class', 'id', 'style'])
+            ->allowElement('section', ['class', 'id', 'style'])
+            ->allowElement('header', ['class', 'id', 'style'])
+            ->allowElement('footer', ['class', 'id', 'style'])
+            ->allowElement('nav', ['class', 'id', 'style'])
+            ->allowElement('button', ['class', 'type', 'style'])
+            ->allowElement('img', ['src', 'alt', 'class', 'style'])
+            ->allowElement('a', ['href', 'target', 'class', 'style'])
+            // Permite SVGs (comum em templates e ícones)
+            ->allowElement('svg', ['class', 'viewBox', 'fill', 'xmlns'])
+            ->allowElement('path', ['d', 'fill', 'stroke'])
+            // Libera os atributos class e style globalmente para as tags permitidas acima
+            ->allowAttribute('class', '*')
+            ->allowAttribute('style', '*');
+
+        $sanitizer = new HtmlSanitizer($config);
+        $html = $sanitizer->sanitize($html);
+    }
 
     $userId = $_SESSION['user_id'];
     $id = $_POST['id'] ?? null;
@@ -43,6 +78,11 @@ public function save()
     $html = $_POST['html'] ?? '';
     $templateId = $_POST['template_id'] ?? null;
     $loadTemplateContent = $_POST['load_template_content'] ?? false;
+
+    // Novos campos SEO
+    $seoTitle = trim($_POST['seo_title'] ?? '');
+    $seoDescription = trim($_POST['seo_description'] ?? '');
+    $seoImage = trim($_POST['seo_image'] ?? '');
 
     if (!$name) {
         header('Content-Type: application/json');
@@ -75,6 +115,13 @@ public function save()
                 $fields[] = 'template_id = ?';
                 $values[] = $templateId;
             }
+            // Injetar campos de SEO no update
+            $fields[] = 'seo_title = ?';
+            $values[] = $seoTitle;
+            $fields[] = 'seo_description = ?';
+            $values[] = $seoDescription;
+            $fields[] = 'seo_image = ?';
+            $values[] = $seoImage;
 
             $values[] = $id;
             $sql = "UPDATE projects SET " . implode(', ', $fields) . " WHERE id = ?";
@@ -83,6 +130,35 @@ public function save()
 
         } else {
             // INSERT NOVO PROJETO
+            // INSERT NOVO PROJETO - VERIFICAÇÃO DE QUOTA
+            
+            // 1. Descobrir qual o limite do utilizador (via subscrição ativa ou plano gratuito)
+            $stmt = $this->pdo->prepare("
+                SELECT p.max_projects 
+                FROM subscriptions s
+                JOIN plans p ON s.plan_id = p.id
+                WHERE s.user_id = ? AND s.status = 'active'
+                ORDER BY s.created_at DESC LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $plan = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Se não tiver subscrição, assumimos o limite do plano Gratuito (ex: 3 projetos)
+            $maxProjects = $plan ? $plan['max_projects'] : 3; 
+
+            // 2. Contar quantos projetos ele já tem
+            $stmt = $this->pdo->prepare("SELECT COUNT(id) as total FROM projects WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $currentProjects = $stmt->fetch(\PDO::FETCH_ASSOC)['total'];
+
+            if ($currentProjects >= $maxProjects) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => "Atingiu o limite de {$maxProjects} projetos do seu plano. Faça upgrade para criar mais."
+                ]);
+                return;
+            }
             
             // ===== CARREGAR HTML DO TEMPLATE =====
             if ($loadTemplateContent && $templateId && empty($html)) {
@@ -405,6 +481,125 @@ public function save()
         } catch (\Exception $e) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 👁️ Visualizar (Preview) o site estático completo com URLs absolutas
+     */
+    public function preview()
+    {
+        $userId = $_SESSION['user_id'];
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            die('ID do projeto ausente');
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT id, name, html_content 
+                FROM projects 
+                WHERE id = ? AND user_id = ?
+            ");
+            $stmt->execute([$id, $userId]);
+            $project = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$project) {
+                die('Projeto não encontrado');
+            }
+
+            require_once __DIR__ . '/../helpers/whm_deploy.php';
+            $html = buildStaticHtml($project);
+
+            header('Content-Type: text/html; charset=utf-8');
+            echo $html;
+            exit;
+
+        } catch (\Exception $e) {
+            die('Erro ao gerar preview: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ⬇️ Baixar (Download) o site empacotado como um ZIP com URLs absolutas
+     */
+    public function download()
+    {
+        $userId = $_SESSION['user_id'];
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            die('ID do projeto ausente');
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT id, name, html_content 
+                FROM projects 
+                WHERE id = ? AND user_id = ?
+            ");
+            $stmt->execute([$id, $userId]);
+            $project = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$project) {
+                die('Projeto não encontrado');
+            }
+
+            require_once __DIR__ . '/../helpers/whm_deploy.php';
+            $html = buildStaticHtml($project);
+
+            $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $project['name']);
+            if (empty($filename)) {
+                $filename = 'projeto_' . $id;
+            }
+
+            // Registrar download para cotas
+            try {
+                $stmtLog = $this->pdo->prepare("
+                    INSERT INTO downloads_log (user_id, project_id, created_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                ");
+                $stmtLog->execute([$userId, $id]);
+            } catch (\Exception $e) {
+                // Ignorar erro do log de download para não travar a exportação
+            }
+
+            if (class_exists('\ZipArchive')) {
+                $zip = new \ZipArchive();
+                $zipFile = tempnam(sys_get_temp_dir(), 'zip');
+                if ($zip->open($zipFile, \ZipArchive::CREATE) === TRUE) {
+                    $zip->addFromString('index.html', $html);
+                    $zip->close();
+
+                    // Limpa qualquer buffer de saída ativo para evitar corrupção de binário
+                    while (ob_get_level()) {
+                        ob_end_clean();
+                    }
+
+                    header('Content-Type: application/zip');
+                    header('Content-Disposition: attachment; filename="' . $filename . '.zip"');
+                    header('Content-Length: ' . filesize($zipFile));
+                    header('Pragma: no-cache');
+                    header('Expires: 0');
+                    
+                    readfile($zipFile);
+                    unlink($zipFile);
+                    exit;
+                }
+            }
+
+            // Fallback: download como arquivo HTML direto se ZipArchive não estiver disponível
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: text/html; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '.html"');
+            echo $html;
+            exit;
+
+        } catch (\Exception $e) {
+            die('Erro ao gerar download: ' . $e->getMessage());
         }
     }
 }

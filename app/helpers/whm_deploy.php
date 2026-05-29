@@ -52,8 +52,11 @@ function deployProject($pdo, $projectId, $userId)
             ];
         }
 
+        // Empacota o conteúdo num esqueleto HTML5 completo
+        $fullStaticHtml = buildStaticHtml($project);
+
         // Criar subdomínio no servidor (WHM/cPanel)
-        $createResult = createSubdomain($subdomain, $project['html_content']);
+        $createResult = createSubdomain($subdomain, $fullStaticHtml);
         
         if (!$createResult['success']) {
             return [
@@ -96,6 +99,99 @@ function deployProject($pdo, $projectId, $userId)
             'message' => 'Erro ao publicar projeto: ' . $e->getMessage()
         ];
     }
+}
+
+/**
+ * Constrói a estrutura HTML5 completa para o site estático
+ * * @param array $project
+ * @return string
+ */
+function buildStaticHtml($project)
+{
+    $seoTitle = $project['seo_title'] ?? null;
+    $seoDescription = $project['seo_description'] ?? null;
+    $seoImage = $project['seo_image'] ?? null;
+    $projectName = $project['name'] ?? 'Meu Site';
+
+    $title = htmlspecialchars($seoTitle ?: $projectName, ENT_QUOTES, 'UTF-8');
+    $description = htmlspecialchars($seoDescription ?: 'Site gerado pela plataforma Sites da Fábrica', ENT_QUOTES, 'UTF-8');
+    $content = $project['html_content'] ?? '';
+
+    // 1. Identifica a URL principal do SaaS para buscar as imagens de forma absoluta
+    $appUrl = getenv('APP_URL') ?: ($_ENV['APP_URL'] ?? '');
+    
+    if (empty($appUrl)) {
+        // Fallback automático inteligente caso a variável de ambiente não esteja definida
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $appUrl = $protocol . $host;
+    }
+    // Remove qualquer barra final para evitar caminhos duplicados (ex: //uploads)
+    $appUrl = rtrim($appUrl, '/');
+
+    // 🔥 CORREÇÃO CRÍTICA: Transforma caminhos relativos de imagens em URLs absolutas fixas
+    // Funciona para tags <img> e propriedades CSS url() comuns em builders visuais
+    $content = str_replace('src="/uploads/', 'src="' . $appUrl . '/uploads/', $content);
+    $content = str_replace("src='/uploads/", "src='" . $appUrl . "/uploads/", $content);
+    $content = str_replace('url("/uploads/', 'url("' . $appUrl . '/uploads/', $content);
+    $content = str_replace("url('/uploads/", "url('" . $appUrl . "/uploads/", $content);
+    $content = str_replace('url(&quot;/uploads/', 'url(&quot;' . $appUrl . '/uploads/', $content);
+    $content = str_replace('url(&#039;/uploads/', 'url(&#039;' . $appUrl . '/uploads/', $content);
+    // ✅ Substitui qualquer imagem de capa ou thumbnail do template pela imagem definida no SEO
+    if (!empty($seoImage)) {
+        $content = preg_replace('/<img[^>]*src="[^"\\]*\/template_assets\/[^"\\]*"[^>]*>/i', '', $content);
+    }
+    
+    $ogImageTag = '';
+    if (!empty($seoImage)) {
+        $imageUrl = htmlspecialchars($seoImage, ENT_QUOTES, 'UTF-8');
+        // Garantir URL absoluta para o WhatsApp/Facebook conseguir ler a imagem
+        if (strpos($imageUrl, 'http') !== 0) {
+            $imageUrl = $appUrl . $imageUrl;
+        }
+        $ogImageTag = "<meta property=\"og:image\" content=\"{$imageUrl}\">\n    <meta name=\"twitter:image\" content=\"{$imageUrl}\">";
+    }
+    // Monta a estrutura HTML final
+    $html = <<<HTML
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$title}</title>
+    <meta name="description" content="{$description}">
+    {$ogImageTag}
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="bg-white text-gray-900 font-sans">
+    
+    {$content}
+
+</body>
+</html>
+HTML;
+
+    return $html;
 }
 
 /**

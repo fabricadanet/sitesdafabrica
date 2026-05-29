@@ -31,25 +31,36 @@ class AdminController
 
     // ===== DASHBOARD =====
     public function dashboard()
-    {
-        $totalUsers = $this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-        $totalProjects = $this->pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
-        $totalTemplates = $this->pdo->query("SELECT COUNT(*) FROM templates_library")->fetchColumn();
-        $totalSubscriptions = $this->pdo->query("SELECT COUNT(*) FROM subscriptions WHERE status='active'")->fetchColumn();
+        {
+            // 1. Receita Mensal Recorrente (MRR)
+            $stmt = $this->pdo->query("
+                SELECT COALESCE(SUM(p.price), 0) as mrr 
+                FROM subscriptions s 
+                JOIN plans p ON s.plan_id = p.id 
+                WHERE s.status = 'active'
+            ");
+            $mrr = $stmt->fetch(\PDO::FETCH_ASSOC)['mrr'];
 
-        $revenue = $this->pdo->query("
-            SELECT COALESCE(SUM(p.price), 0) as total
-            FROM subscriptions s
-            JOIN plans p ON s.plan_id = p.id
-            WHERE s.status='active'
-        ")->fetch(\PDO::FETCH_ASSOC)['total'];
+            // 2. Total de Utilizadores
+            $stmt = $this->pdo->query("SELECT COUNT(id) as total FROM users WHERE role != 'admin'");
+            $totalUsers = $stmt->fetch(\PDO::FETCH_ASSOC)['total'];
 
-        $recentUsers = $this->pdo->query("
-            SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 5
-        ")->fetchAll(\PDO::FETCH_ASSOC);
+            // 3. Taxa de Ativação (Sites Publicados)
+            $stmt = $this->pdo->query("SELECT COUNT(id) as total FROM projects WHERE is_published = 1");
+            $publishedProjects = $stmt->fetch(\PDO::FETCH_ASSOC)['total'];
 
-        include __DIR__ . '/../Views/admin/dashboard.php';
-    }
+            // 4. Últimos Projetos (Para monitorizar a atividade recente)
+            $stmt = $this->pdo->query("
+                SELECT p.name, p.status, p.created_at, u.name as user_name 
+                FROM projects p 
+                JOIN users u ON p.user_id = u.id 
+                ORDER BY p.updated_at DESC 
+                LIMIT 5
+            ");
+            $recentProjects = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            include __DIR__ . '/../Views/admin/dashboard.php';
+        }
 
     // ===== TEMPLATES =====
     public function templates()
@@ -392,9 +403,6 @@ class AdminController
         }
     }
 
-
-// Substitua o método planSave() existente por este:
-
     public function planSave()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -473,10 +481,6 @@ class AdminController
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
-
-
-
-
     public function planDelete()
     {
         $id = $_GET['id'] ?? null;
@@ -665,5 +669,121 @@ class AdminController
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+    }
+    /**
+     * Entra na conta de um utilizador específico
+     */
+    public function impersonate()
+    {
+        $targetUserId = $_GET['id'] ?? null;
+        
+        if (!$targetUserId) {
+            die("ID não fornecido.");
+        }
+
+        // Guarda o ID do Admin atual numa variável de sessão especial
+        $_SESSION['admin_id'] = $_SESSION['user_id'];
+        
+        // Troca o ID da sessão para o ID do cliente
+        $_SESSION['user_id'] = $targetUserId;
+        
+        // Redireciona para o painel do cliente
+        header('Location: /projects');
+        exit;
+    }
+
+    /**
+     * Devolve a sessão ao Admin original
+     */
+    public function stopImpersonating()
+    {
+        if (isset($_SESSION['admin_id'])) {
+            $_SESSION['user_id'] = $_SESSION['admin_id'];
+            unset($_SESSION['admin_id']);
+        }
+        
+        header('Location: /admin/users');
+        exit;
+    }
+
+    public function templateUploadZip()
+    {
+        if (!isset($_FILES['zip_file']) || $_FILES['zip_file']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['success' => false, 'message' => 'Erro no upload do ficheiro.']);
+            return;
+        }
+
+        $templateName = trim($_POST['name'] ?? 'Novo Template');
+        $category = trim($_POST['category'] ?? 'Geral');
+        $file = $_FILES['zip_file']['tmp_name'];
+
+        $zip = new \ZipArchive();
+        if ($zip->open($file) === true) {
+            // Gerar nome único para o template
+            $hash = bin2hex(random_bytes(4));
+            $folderName = 'tpl_' . time() . '_' . $hash;
+            $extractPath = sys_get_temp_dir() . '/' . $folderName;
+            
+            $zip->extractTo($extractPath);
+            $zip->close();
+
+            // Procurar pelo index.html
+            $indexPath = $extractPath . '/index.html';
+            if (!file_exists($indexPath)) {
+                echo json_encode(['success' => false, 'message' => 'O ZIP deve conter um ficheiro index.html na raiz.']);
+                return;
+            }
+
+            // Ler conteúdo do HTML
+            $htmlContent = file_get_contents($indexPath);
+
+            // Mover pasta de assets se existir (ex: imagens, css do template)
+            $publicAssetsPath = __DIR__ . '/../../public/templates/assets/' . $folderName;
+            if (is_dir($extractPath . '/assets')) {
+                mkdir($publicAssetsPath, 0755, true);
+                // Copiar ficheiros de assets (simplificado)
+                $assets = glob($extractPath . '/assets/*');
+                foreach ($assets as $asset) {
+                    if (is_file($asset)) {
+                        copy($asset, $publicAssetsPath . '/' . basename($asset));
+                        // Atualizar caminhos no HTML
+                        $htmlContent = str_replace('assets/' . basename($asset), '/templates/assets/' . $folderName . '/' . basename($asset), $htmlContent);
+                    }
+                }
+            }
+
+            // Guardar o ficheiro HTML final na pasta de templates
+            $htmlFileName = $folderName . '.html';
+            file_put_contents(__DIR__ . '/../../public/templates/' . $htmlFileName, $htmlContent);
+
+            // Inserir na base de dados
+            $stmt = $this->pdo->prepare("
+                INSERT INTO templates_library (name, title, description, category, html_file, status, order_position) 
+                VALUES (?, ?, ?, ?, ?, 'active', 0)
+            ");
+            $stmt->execute([
+                strtolower(str_replace(' ', '_', $templateName)),
+                $templateName,
+                'Template importado automaticamente',
+                $category,
+                $htmlFileName
+            ]);
+
+            // Limpeza
+            $this->deleteDir($extractPath);
+
+            echo json_encode(['success' => true, 'message' => 'Template instalado com sucesso!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Não foi possível ler o ficheiro ZIP.']);
+        }
+    }
+
+    private function deleteDir($dirPath) {
+        if (!is_dir($dirPath)) return;
+        $files = glob($dirPath . '*', GLOB_MARK);
+        foreach ($files as $file) {
+            is_dir($file) ? $this->deleteDir($file) : unlink($file);
+        }
+        rmdir($dirPath);
     }
 }
